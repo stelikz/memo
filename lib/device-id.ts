@@ -1,9 +1,7 @@
 import * as Crypto from "expo-crypto";
 import { eq } from "drizzle-orm";
-import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { appSettings } from "../db/schema";
-
-type DrizzleDB = BaseSQLiteDatabase<"sync", any, any>;
+import { type DrizzleDB } from "../db/types";
 
 const DEVICE_ID_KEY = "device_id";
 

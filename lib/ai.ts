@@ -1,9 +1,7 @@
-import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import * as Crypto from "expo-crypto";
 import { getDeviceId } from "./device-id";
 import { getCardsByLemma, createCard } from "../db/queries";
-
-type DrizzleDB = BaseSQLiteDatabase<"sync", any, any>;
+import { type DrizzleDB, nowUnix } from "../db/types";
 
 // TODO: move to env config
 const EDGE_FUNCTION_URL = "https://<project-ref>.supabase.co/functions/v1/ai-proxy";
@@ -144,8 +142,6 @@ export function savePendingCard(
   params: { word: string; sentence?: string; targetLanguage: string },
 ): string {
   const id = Crypto.randomUUID();
-  const now = Math.floor(Date.now() / 1000);
-
   createCard(db, {
     id,
     status: "pending",
@@ -165,7 +161,7 @@ export function savePendingCard(
     synonymsJson: "[]",
     antonym: null,
     irregularForms: null,
-    due: now,
+    due: nowUnix(),
     stability: 0,
     difficulty: 0,
     elapsedDays: 0,
@@ -185,13 +181,12 @@ export function savePendingCard(
 async function generateCardOrSavePending(
   db: DrizzleDB,
   params: GenerateCardParams,
-  pendingParams: { word: string; sentence?: string; targetLanguage: string },
 ): Promise<AICardResponse | { pendingCardId: string }> {
   try {
     return await generateCard(db, params);
   } catch (error) {
     if (error instanceof OfflineError) {
-      return { pendingCardId: savePendingCard(db, pendingParams) };
+      return { pendingCardId: savePendingCard(db, params) };
     }
     throw error;
   }
@@ -212,7 +207,6 @@ export async function addWord(
   const firstResult = await generateCardOrSavePending(
     db,
     { ...params, existingMeanings: guessedMeanings.length > 0 ? guessedMeanings : undefined },
-    params,
   );
   if ("pendingCardId" in firstResult) {
     return { status: "pending", cardId: firstResult.pendingCardId };
@@ -232,7 +226,6 @@ export async function addWord(
     const retryResult = await generateCardOrSavePending(
       db,
       { ...params, existingMeanings: realMeanings },
-      params,
     );
     if ("pendingCardId" in retryResult) {
       return { status: "pending", cardId: retryResult.pendingCardId };

@@ -3,15 +3,15 @@ import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core
 export const cards = sqliteTable(
   "cards",
   {
-    id: text("id").primaryKey(), // UUID
-    createdAt: integer("created_at").notNull(), // unix timestamp
-    updatedAt: integer("updated_at").notNull(), // unix timestamp
+    id: text("id").primaryKey(),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
 
     // Card status: "complete" = fully generated, "pending" = awaiting AI processing (offline queue)
     status: text("status").notNull().$default(() => "complete"),
 
     // Language
-    targetLanguage: text("target_language").notNull(), // "fr", "de", "es", "ja", etc.
+    targetLanguage: text("target_language").notNull(),
 
     // Word identity
     lemma: text("lemma").notNull(),
@@ -33,29 +33,29 @@ export const cards = sqliteTable(
 
     // Polysemy
     totalCommonMeanings: integer("total_common_meanings").notNull(),
-    otherMeaningsJson: text("other_meanings_json").notNull(), // JSON string
+    otherMeaningsJson: text("other_meanings_json").notNull(),
 
     // Related words
-    synonymsJson: text("synonyms_json").notNull(), // JSON string
+    synonymsJson: text("synonyms_json").notNull(),
     antonym: text("antonym"),
 
     // Irregular forms
     irregularForms: text("irregular_forms"),
 
     // FSRS scheduling fields
-    due: integer("due").notNull(), // unix timestamp
+    due: integer("due").notNull(),
     stability: real("stability").notNull(),
     difficulty: real("difficulty").notNull(),
     elapsedDays: integer("elapsed_days").notNull(),
     scheduledDays: integer("scheduled_days").notNull(),
     reps: integer("reps").notNull(),
     lapses: integer("lapses").notNull(),
-    state: integer("state").notNull(), // 0=New, 1=Learning, 2=Review, 3=Relearning
-    lastReview: integer("last_review"), // unix timestamp, nullable
+    state: integer("state").notNull(),
+    lastReview: integer("last_review"),
     learningSteps: integer("learning_steps").notNull().$default(() => 0),
 
     // Suspension — independent of FSRS state, so suspend/unsuspend preserves scheduling data
-    isSuspended: integer("is_suspended").notNull().$default(() => 0), // 0=active, 1=suspended
+    isSuspended: integer("is_suspended").notNull().$default(() => 0),
   },
   (table) => [
     index("idx_cards_due").on(table.state, table.due),

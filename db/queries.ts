@@ -1,15 +1,12 @@
 import { eq, and, lte, inArray, asc, count, sql } from "drizzle-orm";
-import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { cards } from "./schema";
-
-// Works with both expo-sqlite and better-sqlite3 drizzle instances
-type DrizzleDB = BaseSQLiteDatabase<"sync", any, any>;
+import { type DrizzleDB, type CardStatus, CardState, nowUnix } from "./types";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface NewCard {
   id: string;
-  status?: string; // "complete" (default) or "pending"
+  status?: CardStatus;
   targetLanguage: string;
   lemma: string;
   senseId: string;
@@ -48,7 +45,7 @@ export type Card = NewCard & {
 // ── Create ───────────────────────────────────────────────────────────────────
 
 export function createCard(db: DrizzleDB, card: NewCard) {
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowUnix();
   return db.insert(cards).values({
     ...card,
     status: card.status ?? "complete",
@@ -59,7 +56,7 @@ export function createCard(db: DrizzleDB, card: NewCard) {
 }
 
 export function createCards(db: DrizzleDB, newCards: NewCard[]) {
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowUnix();
   return db.insert(cards).values(
     newCards.map((c) => ({
       ...c,
@@ -87,7 +84,7 @@ export function getCardsByLemma(db: DrizzleDB, lemma: string) {
  * Ordered by due date ascending so learning/relearning cards come back first.
  */
 export function getDueCards(db: DrizzleDB, now?: number) {
-  const timestamp = now ?? Math.floor(Date.now() / 1000);
+  const timestamp = now ?? nowUnix();
   return db
     .select()
     .from(cards)
@@ -106,7 +103,7 @@ export function getDueCards(db: DrizzleDB, now?: number) {
  * Count cards due for review.
  */
 export function countDueCards(db: DrizzleDB, now?: number) {
-  const timestamp = now ?? Math.floor(Date.now() / 1000);
+  const timestamp = now ?? nowUnix();
   const result = db
     .select({ count: count() })
     .from(cards)
@@ -167,7 +164,7 @@ export function updateCardAfterReview(
 ) {
   return db
     .update(cards)
-    .set({ ...update, updatedAt: Math.floor(Date.now() / 1000) })
+    .set({ ...update, updatedAt: nowUnix() })
     .where(eq(cards.id, id))
     .run();
 }
@@ -179,24 +176,21 @@ export function updateCard(
 ) {
   return db
     .update(cards)
-    .set({ ...fields, updatedAt: Math.floor(Date.now() / 1000) })
+    .set({ ...fields, updatedAt: nowUnix() })
     .where(eq(cards.id, id))
     .run();
 }
 
 /**
  * Append a user sentence to an existing card's userSentencesJson array.
+ * Uses SQLite json_insert to avoid a SELECT round-trip.
  */
 export function addUserSentence(db: DrizzleDB, id: string, sentence: string) {
-  const card = getCardById(db, id);
-  if (!card) return;
-  const sentences: string[] = JSON.parse(card.userSentencesJson);
-  sentences.push(sentence);
   return db
     .update(cards)
     .set({
-      userSentencesJson: JSON.stringify(sentences),
-      updatedAt: Math.floor(Date.now() / 1000),
+      userSentencesJson: sql`json_insert(${cards.userSentencesJson}, '$[#]', ${sentence})`,
+      updatedAt: nowUnix(),
     })
     .where(eq(cards.id, id))
     .run();
@@ -208,7 +202,7 @@ export function addUserSentence(db: DrizzleDB, id: string, sentence: string) {
 export function suspendCard(db: DrizzleDB, id: string) {
   return db
     .update(cards)
-    .set({ isSuspended: 1, updatedAt: Math.floor(Date.now() / 1000) })
+    .set({ isSuspended: 1, updatedAt: nowUnix() })
     .where(eq(cards.id, id))
     .run();
 }
@@ -216,7 +210,7 @@ export function suspendCard(db: DrizzleDB, id: string) {
 export function unsuspendCard(db: DrizzleDB, id: string) {
   return db
     .update(cards)
-    .set({ isSuspended: 0, updatedAt: Math.floor(Date.now() / 1000) })
+    .set({ isSuspended: 0, updatedAt: nowUnix() })
     .where(eq(cards.id, id))
     .run();
 }
@@ -232,7 +226,7 @@ export function deleteCard(db: DrizzleDB, id: string) {
 export function bulkSuspend(db: DrizzleDB, ids: string[]) {
   return db
     .update(cards)
-    .set({ isSuspended: 1, updatedAt: Math.floor(Date.now() / 1000) })
+    .set({ isSuspended: 1, updatedAt: nowUnix() })
     .where(inArray(cards.id, ids))
     .run();
 }
@@ -240,7 +234,7 @@ export function bulkSuspend(db: DrizzleDB, ids: string[]) {
 export function bulkUnsuspend(db: DrizzleDB, ids: string[]) {
   return db
     .update(cards)
-    .set({ isSuspended: 0, updatedAt: Math.floor(Date.now() / 1000) })
+    .set({ isSuspended: 0, updatedAt: nowUnix() })
     .where(inArray(cards.id, ids))
     .run();
 }
@@ -254,7 +248,7 @@ export function bulkDelete(db: DrizzleDB, ids: string[]) {
  * with default FSRS values and due = now.
  */
 export function bulkResetProgress(db: DrizzleDB, ids: string[]) {
-  const now = Math.floor(Date.now() / 1000);
+  const now = nowUnix();
   return db
     .update(cards)
     .set({
@@ -265,7 +259,7 @@ export function bulkResetProgress(db: DrizzleDB, ids: string[]) {
       scheduledDays: 0,
       reps: 0,
       lapses: 0,
-      state: 0,
+      state: CardState.New,
       lastReview: null,
       learningSteps: 0,
       updatedAt: now,

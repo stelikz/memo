@@ -89,12 +89,9 @@ Deno.serve(async (req) => {
 
   const today = new Date().toISOString().split("T")[0];
 
-  const { data: rateLimit, error: rateLimitError } = await supabase
-    .from("rate_limits")
-    .select("request_count")
-    .eq("device_id", deviceId)
-    .eq("date", today)
-    .maybeSingle();
+  // Atomically increment and check the rate limit in a single query
+  const { data: newCount, error: rateLimitError } = await supabase
+    .rpc("increment_rate_limit", { p_device_id: deviceId, p_date: today });
 
   if (rateLimitError) {
     console.error("Rate limit check failed:", rateLimitError);
@@ -104,25 +101,11 @@ Deno.serve(async (req) => {
     );
   }
 
-  const currentCount = rateLimit?.request_count ?? 0;
-
-  if (currentCount >= 50) {
+  if (newCount > 50) {
     return new Response(
       JSON.stringify({ error: "Daily limit reached. You can add up to 50 words per day." }),
       { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-  }
-
-  // Increment the counter (upsert)
-  const { error: upsertError } = await supabase
-    .from("rate_limits")
-    .upsert(
-      { device_id: deviceId, date: today, request_count: currentCount + 1 },
-      { onConflict: "device_id,date" },
-    );
-
-  if (upsertError) {
-    console.error("Rate limit upsert failed:", upsertError);
   }
 
   // Parse request
