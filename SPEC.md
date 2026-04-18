@@ -28,7 +28,7 @@ The accent in Mémo nods to the app's French origins while remaining language-ne
 | Localization | i18n-js or expo-localization + custom locale maps |
 | Camera (v1.1) | expo-camera |
 | Backend | Supabase Edge Functions (AI proxy only — no auth/sync in v1) |
-| AI Provider | Anthropic Claude API (via Supabase Edge Function) |
+| AI Provider | Google Gemini API (via Supabase Edge Function) |
 
 ---
 
@@ -77,7 +77,7 @@ Implementation: use `expo-share-intent` to register the app as a share target fo
 1. User taps "Camera" on the Add Word screen
 2. User points camera at a French text (book, menu, sign, etc.)
 3. User takes a photo
-4. Photo is sent to the AI backend (Claude handles image input natively)
+4. Photo is sent to the AI backend (Gemini handles image input natively)
 5. AI extracts all visible text, identifies French content
 6. App shows the extracted text — user taps the word they want to learn
 7. AI identifies the tapped word + surrounding sentence, then follows the standard card generation flow
@@ -97,15 +97,36 @@ Implementation: use `expo-camera` for capture. The same AI Edge Function handles
 ### Architecture
 
 ```
-App → HTTPS → Supabase Edge Function → Anthropic Claude API
+App → HTTPS → Supabase Edge Function → Google Gemini API
                 (API key stored here)
 ```
 
 The Edge Function is a thin proxy:
 - Receives word + sentence + existing meanings for that lemma (if any)
-- Forwards to Claude with a structured prompt
+- Forwards to Gemini with a structured prompt
 - Returns the JSON response to the app
-- Handles rate limiting per device (optional, nice to have)
+- Enforces per-device rate limiting (see below)
+
+### Rate Limiting
+
+The Edge Function enforces a daily limit of **50 AI calls per device** to prevent abuse.
+
+- The app sends an `x-device-id` header with each request (a UUID generated once on first launch and persisted locally)
+- The Edge Function tracks usage in a Supabase Postgres table:
+
+```sql
+create table rate_limits (
+  device_id text not null,
+  date date not null default current_date,
+  request_count integer not null default 1,
+  primary key (device_id, date)
+);
+```
+
+- On each request, the function upserts the counter for the device + current date:
+  - If `request_count` < 50: increment and proceed
+  - If `request_count` >= 50: reject with HTTP `429 Too Many Requests` and body `{ "error": "Daily limit reached. You can add up to 50 words per day." }`
+- Old rows can be cleaned up periodically (e.g. delete rows older than 7 days) but this is not required for v1
 
 ### AI Prompt Responsibilities
 
@@ -445,7 +466,7 @@ app_settings {
 /supabase
   /functions
     /ai-proxy
-      index.ts          # Edge Function: receives word+sentence+language, calls Claude
+      index.ts          # Edge Function: receives word+sentence+language, calls Gemini
 ```
 
 ---
@@ -471,7 +492,7 @@ npm install drizzle-orm ts-fsrs zustand nativewind tailwindcss i18n-js
 
 4. **Offline handling**: Wrap the AI call in a try/catch. If offline, save the card with `status: "pending"` — it stores the word + sentence but has empty AI-generated fields. When connectivity returns, query all pending cards and process them through the AI pipeline.
 
-5. **Edge Function security**: Use a simple shared secret (app sends a hardcoded token in the header, Edge Function validates it). Not bulletproof, but fine for a personal app. Don't ship your Claude API key in the app binary.
+5. **Edge Function security**: Use a simple shared secret (app sends a hardcoded token in the header, Edge Function validates it). Not bulletproof, but fine for a personal app. Don't ship your Gemini API key in the app binary.
 
 6. **Polysemy threshold**: Only show the disambiguation flow if the AI's `is_new_sense` is true. If the AI says it's the same sense as an existing card, just append the sentence to the existing card's `user_sentences_json` silently (with a toast notification).
 
