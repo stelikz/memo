@@ -7,6 +7,7 @@ CREATE TABLE `cards` (
 	`id` text PRIMARY KEY NOT NULL,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL,
+	`status` text NOT NULL,
 	`target_language` text NOT NULL,
 	`lemma` text NOT NULL,
 	`sense_id` text NOT NULL,
@@ -16,7 +17,7 @@ CREATE TABLE `cards` (
 	`grammar_json` text NOT NULL,
 	`primary_definition_target` text NOT NULL,
 	`primary_definition_native` text NOT NULL,
-	`user_sentence` text,
+	`user_sentences_json` text NOT NULL,
 	`example_sentence` text NOT NULL,
 	`total_common_meanings` integer NOT NULL,
 	`other_meanings_json` text NOT NULL,
@@ -31,7 +32,9 @@ CREATE TABLE `cards` (
 	`reps` integer NOT NULL,
 	`lapses` integer NOT NULL,
 	`state` integer NOT NULL,
-	`last_review` integer
+	`last_review` integer,
+	`learning_steps` integer NOT NULL,
+	`is_suspended` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `cards_sense_id_unique` ON `cards` (`sense_id`);--> statement-breakpoint

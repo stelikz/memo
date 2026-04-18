@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, index, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core";
 
 export const cards = sqliteTable(
   "cards",
@@ -6,6 +6,9 @@ export const cards = sqliteTable(
     id: text("id").primaryKey(), // UUID
     createdAt: integer("created_at").notNull(), // unix timestamp
     updatedAt: integer("updated_at").notNull(), // unix timestamp
+
+    // Card status: "complete" = fully generated, "pending" = awaiting AI processing (offline queue)
+    status: text("status").notNull().$default(() => "complete"),
 
     // Language
     targetLanguage: text("target_language").notNull(), // "fr", "de", "es", "ja", etc.
@@ -24,8 +27,8 @@ export const cards = sqliteTable(
     primaryDefinitionTarget: text("primary_definition_target").notNull(),
     primaryDefinitionNative: text("primary_definition_native").notNull(),
 
-    // Context
-    userSentence: text("user_sentence"),
+    // Context — user_sentences_json is a JSON array of sentences the user provided
+    userSentencesJson: text("user_sentences_json").notNull().$default(() => "[]"),
     exampleSentence: text("example_sentence").notNull(),
 
     // Polysemy
@@ -49,6 +52,10 @@ export const cards = sqliteTable(
     lapses: integer("lapses").notNull(),
     state: integer("state").notNull(), // 0=New, 1=Learning, 2=Review, 3=Relearning
     lastReview: integer("last_review"), // unix timestamp, nullable
+    learningSteps: integer("learning_steps").notNull().$default(() => 0),
+
+    // Suspension — independent of FSRS state, so suspend/unsuspend preserves scheduling data
+    isSuspended: integer("is_suspended").notNull().$default(() => 0), // 0=active, 1=suspended
   },
   (table) => [
     index("idx_cards_due").on(table.state, table.due),

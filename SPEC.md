@@ -44,7 +44,7 @@ The accent in Mémo nods to the app's French origins while remaining language-ne
 4. AI returns structured JSON (see AI Response Schema below)
 5. App checks: does a card with the same `lemma` already exist?
    - **No existing card**: save as new card, show confirmation
-   - **Existing card, same meaning**: ask user — "You already have this word with this meaning. Add this sentence as another example?" 
+   - **Existing card, same meaning**: ask user — "You already have this word with this meaning. Add this sentence as another example?" If yes, append the new sentence to the existing card's `user_sentences_json` array
    - **Existing card, different meaning**: show "You already know *louer* = to rent. This is a different meaning: to praise." User taps [Add as new card] or [Same meaning, just add sentence]
 6. Card saved to SQLite with FSRS initial state
 
@@ -183,6 +183,9 @@ cards {
   created_at: integer (unix timestamp)
   updated_at: integer (unix timestamp)
   
+  // Card status: "complete" or "pending" (offline queue — word+sentence saved, awaiting AI)
+  status: text                      // "complete" (default), "pending"
+  
   // Language — intentionally text, not enum. SQLite has no real enum type
   // (Drizzle would fake it with a CHECK constraint), and adding a new
   // language would require a schema migration. Validate in TypeScript
@@ -191,7 +194,7 @@ cards {
   
   // Word identity
   lemma: text                       // "aller" — shared across senses
-  sense_id: text (unique)           // "aller_to_go" — unique per meaning
+  sense_id: text (unique)           // "aller_1", "aller_2" — app-generated, deterministic
   encountered_form: text            // "vais"
   part_of_speech: text
   pronunciation_ipa: text
@@ -206,9 +209,9 @@ cards {
   primary_definition_target: text   // definition in the target language
   primary_definition_native: text   // definition in the user's native language
   
-  // Context
-  user_sentence: text | null        // the sentence the user provided
-  example_sentence: text            // could be user's or AI-generated
+  // Context — multiple user sentences supported (JSON array of strings)
+  user_sentences_json: text         // e.g. '["Je loue un appartement.", "On loue des voitures."]'
+  example_sentence: text            // AI-generated example sentence
   
   // Polysemy
   total_common_meanings: integer
@@ -231,6 +234,10 @@ cards {
   lapses: integer
   state: integer                    // 0=New, 1=Learning, 2=Review, 3=Relearning
   last_review: integer | null (unix timestamp)
+  learning_steps: integer           // ts-fsrs v5: which step in learning/relearning sequence
+  
+  // Suspension — independent flag, never touches FSRS state
+  is_suspended: integer             // 0=active (default), 1=suspended
 }
 ```
 
@@ -248,6 +255,8 @@ app_settings {
 // "show_native_by_default" — "false" (default)
 // "reminder_enabled" — "true"
 // "reminder_time" — "20:00"
+// "current_streak" — "0" (number of consecutive days with at least one review)
+// "last_review_date" — "" (ISO date string, e.g. "2026-04-18")
 ```
 
 ### Indexes
@@ -350,8 +359,13 @@ app_settings {
 - "Show English by default" toggle (controls native-language translation visibility on card back)
 - Target language selector (French for v1, extensible)
 - Data stats: total cards, mature cards, longest streak
-- Export all cards
 - Reset all progress (danger action)
+
+### Error States (inline, not separate screens)
+- **AI call fails** (network error, server error): show retry button with error message on Add Word screen
+- **AI returns invalid JSON**: show error with option to retry or cancel
+- **No internet on Add Word screen**: offer to save as pending (offline queue) — card will be processed when connectivity returns
+- **Review screen**: fully offline, no error states needed
 
 ---
 
@@ -455,13 +469,17 @@ npm install drizzle-orm ts-fsrs zustand nativewind tailwindcss i18n-js
 
 3. **Sentence strongly encouraged**: If the user skips the sentence, show a soft warning: "Adding without context — the definition may not match what you meant." Still allow it.
 
-4. **Offline handling**: Wrap the AI call in a try/catch. If offline, save the word + sentence locally with a "pending" state and process when connectivity returns.
+4. **Offline handling**: Wrap the AI call in a try/catch. If offline, save the card with `status: "pending"` — it stores the word + sentence but has empty AI-generated fields. When connectivity returns, query all pending cards and process them through the AI pipeline.
 
 5. **Edge Function security**: Use a simple shared secret (app sends a hardcoded token in the header, Edge Function validates it). Not bulletproof, but fine for a personal app. Don't ship your Claude API key in the app binary.
 
-6. **Polysemy threshold**: Only show the disambiguation flow if the AI's `is_new_sense` is true. If the AI says it's the same sense as an existing card, just add the sentence as another example silently (with a toast notification).
+6. **Polysemy threshold**: Only show the disambiguation flow if the AI's `is_new_sense` is true. If the AI says it's the same sense as an existing card, just append the sentence to the existing card's `user_sentences_json` silently (with a toast notification).
 
-7. **TTS via expo-speech**: Uses the device's native TTS engine — no API calls, works offline. Map `target_language` codes to BCP-47 voice identifiers (e.g. `"fr"` → `"fr-FR"`). IPA is kept for visual reference on the card; TTS provides the audible complement. On first launch, check `Speech.getAvailableVoicesAsync()` and prefer a high-quality neural voice for the target language if available. Fall back gracefully — if no voice is installed for the target language, hide the speaker icon rather than playing silence or the wrong accent.
+7. **`sense_id` generation**: The app generates `sense_id`, not the AI. Format: `${lemma}_${n}` where `n` is the next available integer for that lemma (e.g. `louer_1`, `louer_2`). Query existing cards by lemma to determine `n`. This avoids relying on the AI to produce unique, consistent identifiers.
+
+8. **Day streak logic**: Stored in `app_settings` as `current_streak` and `last_review_date` (ISO date string). After completing at least one review, check `last_review_date`: if it's yesterday, increment `current_streak`; if it's today, no change; if it's earlier than yesterday, reset to 1. Update `last_review_date` to today. Day boundary is midnight in the device's local timezone.
+
+9. **TTS via expo-speech**: Uses the device's native TTS engine — no API calls, works offline. Map `target_language` codes to BCP-47 voice identifiers (e.g. `"fr"` → `"fr-FR"`). IPA is kept for visual reference on the card; TTS provides the audible complement. On first launch, check `Speech.getAvailableVoicesAsync()` and prefer a high-quality neural voice for the target language if available. Fall back gracefully — if no voice is installed for the target language, hide the speaker icon rather than playing silence or the wrong accent.
 
 ---
 
