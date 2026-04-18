@@ -24,6 +24,7 @@ The accent in Mémo nods to the app's French origins while remaining language-ne
 | Styling | NativeWind (Tailwind for RN) |
 | Notifications | expo-notifications (local) |
 | Share Sheet | expo-share-intent |
+| TTS | expo-speech (native engine, offline) |
 | Localization | i18n-js or expo-localization + custom locale maps |
 | Camera (v1.1) | expo-camera |
 | Backend | Supabase Edge Functions (AI proxy only — no auth/sync in v1) |
@@ -182,7 +183,10 @@ cards {
   created_at: integer (unix timestamp)
   updated_at: integer (unix timestamp)
   
-  // Language
+  // Language — intentionally text, not enum. SQLite has no real enum type
+  // (Drizzle would fake it with a CHECK constraint), and adding a new
+  // language would require a schema migration. Validate in TypeScript
+  // against LANGUAGE_CONFIGS keys instead — that's the source of truth.
   target_language: text              // "fr", "de", "es", "ja", etc.
   
   // Word identity
@@ -286,6 +290,7 @@ app_settings {
 
 ### 5. Card Created Confirmation Screen
 - Success state with card preview (definition, synonyms, antonym)
+- Speaker icon next to the lemma — tap to hear pronunciation via TTS
 - Native-language translation hidden by default (tappable to reveal)
 - Polysemy info if word has multiple common meanings
 - [Add another word] / [Go home] actions
@@ -306,7 +311,8 @@ app_settings {
 
 ### 8. Review Screen — Card Back
 - Sentence with highlighted word (context)
-- Lemma + IPA pronunciation + grammar badge
+- Lemma + IPA pronunciation + grammar badge + speaker icon (tap to hear word via TTS)
+- Tap sentence area to hear the full sentence read aloud
 - Definition in target language
 - Native-language translation hidden behind dashed tap target (e.g. "🇬🇧 Show English translation")
 - Synonyms with register tags
@@ -327,7 +333,7 @@ app_settings {
 - Sort options: newest first, alphabetical, due date
 - Word list showing: word, part of speech, definition preview, FSRS state badge (new/learning/mature), polysemy badge if multiple senses
 - "Select" button to enter mass edit mode
-- Tapping a word opens full card detail (editable)
+- Tapping a word opens full card detail (editable, with TTS playback)
 
 ### 11. Mass Edit Mode
 - Checkboxes appear next to each word
@@ -455,6 +461,8 @@ npm install drizzle-orm ts-fsrs zustand nativewind tailwindcss i18n-js
 
 6. **Polysemy threshold**: Only show the disambiguation flow if the AI's `is_new_sense` is true. If the AI says it's the same sense as an existing card, just add the sentence as another example silently (with a toast notification).
 
+7. **TTS via expo-speech**: Uses the device's native TTS engine — no API calls, works offline. Map `target_language` codes to BCP-47 voice identifiers (e.g. `"fr"` → `"fr-FR"`). IPA is kept for visual reference on the card; TTS provides the audible complement. On first launch, check `Speech.getAvailableVoicesAsync()` and prefer a high-quality neural voice for the target language if available. Fall back gracefully — if no voice is installed for the target language, hide the speaker icon rather than playing silence or the wrong accent.
+
 ---
 
 ## Why SQLite (Not Postgres)
@@ -564,6 +572,7 @@ v1 ships with French only, but the architecture avoids hardcoding French assumpt
 - **Grammar display on cards**: The card back renders grammar info from `grammar_json`. A per-language renderer decides what to show. French: "verbe · avoir". German: "Nomen · n. · Akk.". Japanese: "動詞 · たべる".
 - **Word boundary detection in share sheet**: Latin-script languages (French, German, Spanish) can split on spaces. Japanese/Chinese need AI-assisted word segmentation.
 - **Register labels for synonyms**: French uses "familier / courant / soutenu". Other languages have their own register systems.
+- **TTS voice selection**: Each language needs a BCP-47 locale mapping and optionally a preferred voice ID. French → `"fr-FR"`, German → `"de-DE"`, Japanese → `"ja-JP"`. Some languages have regional variants (e.g. `"fr-CA"`) that could be exposed in settings later.
 
 ### Language Config Example
 
@@ -574,8 +583,9 @@ const LANGUAGE_CONFIGS: Record<string, LanguageConfig> = {
     nativeName: "Français",
     grammarFields: ["gender", "verb_auxiliary", "is_pronominal"],
     registerLabels: ["familier", "courant", "soutenu"],
-    hasGendered Nouns: true,
+    hasGenderedNouns: true,
     wordBoundary: "space",
+    ttsLocale: "fr-FR",
   },
   de: {
     name: "German",
@@ -584,6 +594,7 @@ const LANGUAGE_CONFIGS: Record<string, LanguageConfig> = {
     registerLabels: ["umgangssprachlich", "standardsprachlich", "gehoben"],
     hasGenderedNouns: true,
     wordBoundary: "space",
+    ttsLocale: "de-DE",
   },
   ja: {
     name: "Japanese",
@@ -592,6 +603,7 @@ const LANGUAGE_CONFIGS: Record<string, LanguageConfig> = {
     registerLabels: ["casual", "polite", "formal"],
     hasGenderedNouns: false,
     wordBoundary: "ai_segmentation",
+    ttsLocale: "ja-JP",
   },
 };
 ```
