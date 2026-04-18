@@ -1,5 +1,5 @@
 {
-  "name": "memo-init",
+  "name": "memo",
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
@@ -9,13 +9,28 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "expo": "~54.0.33",
-    "expo-status-bar": "~3.0.9",
-    "react": "19.1.0",
-    "react-native": "0.81.5"
+    "drizzle-orm": "^0.45.2",
+    "expo": "^55.0.15",
+    "expo-localization": "~55.0.13",
+    "expo-notifications": "~55.0.19",
+    "expo-share-intent": "^6.1.0",
+    "expo-sqlite": "~55.0.15",
+    "expo-status-bar": "~55.0.5",
+    "i18n-js": "^4.5.3",
+    "nativewind": "^4.2.3",
+    "react": "19.2.0",
+    "react-native": "0.83.4",
+    "react-native-reanimated": "4.2.1",
+    "react-native-safe-area-context": "~5.6.2",
+    "tailwindcss": "^3.4.19",
+    "ts-fsrs": "^5.3.2",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@types/react": "~19.1.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/react": "~19.2.10",
+    "better-sqlite3": "^12.9.0",
+    "drizzle-kit": "^0.31.10",
     "typescript": "~5.9.2"
   },
   "private": true
