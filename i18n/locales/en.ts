@@ -68,6 +68,14 @@ export const en: Record<string, string> = {
   antonym: "Antonym",
   show_translation: "Show translation",
 
+  // Disambiguation (Screen 6)
+  polysemy_nth_meaning: "This is the {{n}}th meaning of «{{word}}» you've encountered.",
+  polysemy_total_meanings: "This word has roughly {{count}} common meanings.",
+  existing_meanings: "Meanings you already know",
+  new_meaning_detected: "New meaning detected",
+  add_as_new_card: "Add as new card",
+  same_meaning_add_sentence: "Same meaning, just add sentence",
+
   // Common
   card: "card",
   cards: "cards",
