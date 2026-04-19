@@ -1,4 +1,4 @@
-import { eq, and, lte, inArray, asc, count, sql } from "drizzle-orm";
+import { eq, and, lte, inArray, asc, desc, count, sql } from "drizzle-orm";
 import { cards } from "./schema";
 import { type DrizzleDB, type CardStatus, CardState, nowUnix } from "./types";
 
@@ -128,6 +128,19 @@ export function countAllCards(db: DrizzleDB) {
     .where(eq(cards.status, "complete"))
     .get();
   return result?.count ?? 0;
+}
+
+/**
+ * Get recently added cards, ordered by creation date descending.
+ */
+export function getRecentCards(db: DrizzleDB, limit: number = 10) {
+  return db
+    .select()
+    .from(cards)
+    .where(eq(cards.status, "complete"))
+    .orderBy(desc(cards.createdAt))
+    .limit(limit)
+    .all();
 }
 
 /**
