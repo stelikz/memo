@@ -7,9 +7,9 @@ import {
   ScrollView,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
+import { Button } from "../../components/Button";
 import { useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Clipboard from "expo-clipboard";
@@ -339,9 +339,9 @@ export default function AddScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="mb-5 flex-row items-center gap-3">
-            <TouchableOpacity onPress={resetForm} activeOpacity={0.7}>
+            <Button variant="ghost" className="bg-transparent py-0" onPress={resetForm}>
               <Ionicons name="arrow-back" size={24} color="#111827" />
-            </TouchableOpacity>
+            </Button>
             <Text className="flex-1 text-xl font-bold text-gray-900">
               {t("new_meaning_detected")}
             </Text>
@@ -394,24 +394,12 @@ export default function AddScreen() {
           </View>
 
           <View className="mt-8 gap-3">
-            <TouchableOpacity
-              className="items-center rounded-xl bg-blue-600 py-4"
-              activeOpacity={0.8}
-              onPress={handleAddAsNewCard}
-            >
-              <Text className="text-base font-semibold text-white">
-                {t("add_as_new_card")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="items-center rounded-xl border border-gray-300 bg-white py-4"
-              activeOpacity={0.8}
+            <Button label={t("add_as_new_card")} onPress={handleAddAsNewCard} />
+            <Button
+              label={t("same_meaning_add_sentence")}
+              variant="secondary"
               onPress={handleSameMeaning}
-            >
-              <Text className="text-base font-semibold text-gray-700">
-                {t("same_meaning_add_sentence")}
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -444,24 +432,12 @@ export default function AddScreen() {
           </View>
 
           <View className="mt-6 gap-3">
-            <TouchableOpacity
-              className="items-center rounded-xl bg-blue-600 py-4"
-              activeOpacity={0.8}
+            <Button label={t("add_another")} onPress={resetForm} />
+            <Button
+              label={t("go_home")}
+              variant="ghost"
               onPress={resetForm}
-            >
-              <Text className="text-base font-semibold text-white">
-                {t("add_another")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="items-center rounded-xl bg-gray-100 py-4"
-              activeOpacity={0.8}
-              onPress={resetForm}
-            >
-              <Text className="text-base font-semibold text-gray-700">
-                {t("go_home")}
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -480,18 +456,13 @@ export default function AddScreen() {
             {errorMessage}
           </Text>
           <View className="mt-4 w-full gap-3">
-            <TouchableOpacity
-              className="items-center rounded-xl bg-blue-600 py-4"
-              activeOpacity={0.8}
+            <Button
+              label={t("retry")}
               onPress={() => {
                 setPhase("form");
                 setErrorMessage("");
               }}
-            >
-              <Text className="text-base font-semibold text-white">
-                {t("retry")}
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
       </SafeAreaView>
@@ -516,9 +487,9 @@ export default function AddScreen() {
           </Text>
 
           {clipboardText && (
-            <TouchableOpacity
-              className="mb-4 flex-row items-center gap-3 rounded-xl bg-blue-50 px-4 py-3"
-              activeOpacity={0.7}
+            <Button
+              variant="ghost"
+              className="mb-4 flex-row items-center gap-3 bg-blue-50 px-4 py-3"
               onPress={applyClipboard}
             >
               <Ionicons name="clipboard-outline" size={20} color="#2563eb" />
@@ -534,7 +505,7 @@ export default function AddScreen() {
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color="#2563eb" />
-            </TouchableOpacity>
+            </Button>
           )}
 
           <View className="mb-4">
@@ -589,22 +560,12 @@ export default function AddScreen() {
             <SoftWarning message={t("word_not_in_sentence")} />
           )}
 
-          <TouchableOpacity
-            className={`mt-2 items-center rounded-xl py-4 ${
-              hasWord ? "bg-blue-600" : "bg-gray-300"
-            }`}
-            activeOpacity={0.8}
+          <Button
+            className="mt-2"
+            label={submitWarning ? t("add_button") + " \u2192" : t("add_button")}
             onPress={handleSubmit}
             disabled={!hasWord}
-          >
-            <Text
-              className={`text-base font-semibold ${
-                hasWord ? "text-white" : "text-gray-500"
-              }`}
-            >
-              {submitWarning ? t("add_button") + " →" : t("add_button")}
-            </Text>
-          </TouchableOpacity>
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
