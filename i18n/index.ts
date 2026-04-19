@@ -3,6 +3,8 @@ import { useSettingsStore } from "../stores/settings";
 import { fr } from "./locales/fr";
 import { en } from "./locales/en";
 
+export type TranslateFn = (key: string) => string;
+
 const locales: Record<string, Record<string, string>> = { fr, en };
 
 /**
