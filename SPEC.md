@@ -148,6 +148,7 @@ Given a word, sentence, and target language, the AI must:
    - (Extend per language as needed)
 10. **IPA pronunciation**
 11. **Notable irregular forms**
+12. **Correct the user's sentence** — fix accent/diacritical errors in the user-provided sentence (e.g. "ou vous etes" → "où vous êtes"). Return the corrected version so the card displays proper orthography during review
 
 ### AI Response Schema
 
@@ -168,6 +169,7 @@ interface AICardResponse {
   primary_definition_target: string;  // in the target language
   primary_definition_native: string;  // in the user's native language
   example_sentence: string;
+  corrected_sentence: string | null;  // user's sentence with accents/diacritics fixed, null if no sentence provided
   
   // Polysemy
   total_common_meanings: number;    // e.g. 2 for "louer"
@@ -300,7 +302,8 @@ app_settings {
 ### 2. Add Word Screen
 - Word input field (required)
 - Sentence input field (encouraged, with label in target language e.g. "Où l'avez-vous vu?")
-- Clipboard paste suggestion if clipboard contains target language text
+- **Word-in-sentence validation**: if a sentence is provided, check that the word appears in it (accent-insensitive, case-insensitive). If not found, show a soft warning — the user can tap again to proceed anyway
+- Clipboard paste suggestion if clipboard contains target language text (detected via accent/character heuristics per language)
 - "Add" button → loading state → confirmation or polysemy disambiguation
 - Camera scan option (v1.1)
 
@@ -490,17 +493,21 @@ npm install drizzle-orm ts-fsrs zustand nativewind tailwindcss i18n-js
 
 3. **Sentence strongly encouraged**: If the user skips the sentence, show a soft warning: "Adding without context — the definition may not match what you meant." Still allow it.
 
-4. **Offline handling**: Wrap the AI call in a try/catch. If offline, save the card with `status: "pending"` — it stores the word + sentence but has empty AI-generated fields. When connectivity returns, query all pending cards and process them through the AI pipeline.
+4. **Word-in-sentence validation**: Before submitting, verify the entered word appears in the provided sentence (comparison is accent-insensitive and case-insensitive, so "etes" matches "êtes"). If the word is not found, show a soft warning — the user can tap Add again to override. This catches copy-paste mismatches and typos without blocking valid conjugated forms.
 
-5. **Edge Function security**: Use a simple shared secret (app sends a hardcoded token in the header, Edge Function validates it). Not bulletproof, but fine for a personal app. Don't ship your Gemini API key in the app binary.
+5. **AI sentence correction**: The AI returns a `corrected_sentence` field — the user's sentence with proper accents and diacritics restored (e.g. "ou vous etes" → "où vous êtes"). The raw user input is stored in `user_sentences_json` for history; the corrected version is what displays on the review card front. If the user didn't provide a sentence, this field is null.
 
-6. **Polysemy threshold**: Only show the disambiguation flow if the AI's `is_new_sense` is true. If the AI says it's the same sense as an existing card, just append the sentence to the existing card's `user_sentences_json` silently (with a toast notification).
+6. **Offline handling**: Wrap the AI call in a try/catch. If offline, save the card with `status: "pending"` — it stores the word + sentence but has empty AI-generated fields. When connectivity returns, query all pending cards and process them through the AI pipeline.
 
-7. **`sense_id` generation**: The app generates `sense_id`, not the AI. Format: `${lemma}_${n}` where `n` is the next available integer for that lemma (e.g. `louer_1`, `louer_2`). Query existing cards by lemma to determine `n`. This avoids relying on the AI to produce unique, consistent identifiers.
+7. **Edge Function security**: Use a simple shared secret (app sends a hardcoded token in the header, Edge Function validates it). Not bulletproof, but fine for a personal app. Don't ship your Gemini API key in the app binary.
 
-8. **Day streak logic**: Stored in `app_settings` as `current_streak` and `last_review_date` (ISO date string). After completing at least one review, check `last_review_date`: if it's yesterday, increment `current_streak`; if it's today, no change; if it's earlier than yesterday, reset to 1. Update `last_review_date` to today. Day boundary is midnight in the device's local timezone.
+8. **Polysemy threshold**: Only show the disambiguation flow if the AI's `is_new_sense` is true. If the AI says it's the same sense as an existing card, just append the sentence to the existing card's `user_sentences_json` silently (with a toast notification).
 
-9. **TTS via expo-speech**: Uses the device's native TTS engine — no API calls, works offline. Map `target_language` codes to BCP-47 voice identifiers (e.g. `"fr"` → `"fr-FR"`). IPA is kept for visual reference on the card; TTS provides the audible complement. On first launch, check `Speech.getAvailableVoicesAsync()` and prefer a high-quality neural voice for the target language if available. Fall back gracefully — if no voice is installed for the target language, hide the speaker icon rather than playing silence or the wrong accent.
+9. **`sense_id` generation**: The app generates `sense_id`, not the AI. Format: `${lemma}_${n}` where `n` is the next available integer for that lemma (e.g. `louer_1`, `louer_2`). Query existing cards by lemma to determine `n`. This avoids relying on the AI to produce unique, consistent identifiers.
+
+10. **Day streak logic**: Stored in `app_settings` as `current_streak` and `last_review_date` (ISO date string). After completing at least one review, check `last_review_date`: if it's yesterday, increment `current_streak`; if it's today, no change; if it's earlier than yesterday, reset to 1. Update `last_review_date` to today. Day boundary is midnight in the device's local timezone.
+
+11. **TTS via expo-speech**: Uses the device's native TTS engine — no API calls, works offline. Map `target_language` codes to BCP-47 voice identifiers (e.g. `"fr"` → `"fr-FR"`). IPA is kept for visual reference on the card; TTS provides the audible complement. On first launch, check `Speech.getAvailableVoicesAsync()` and prefer a high-quality neural voice for the target language if available. Fall back gracefully — if no voice is installed for the target language, hide the speaker icon rather than playing silence or the wrong accent.
 
 ---
 
