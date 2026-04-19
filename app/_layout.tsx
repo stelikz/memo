@@ -30,6 +30,9 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="add-loading" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="add-success" />
+        <Stack.Screen name="add-disambiguate" />
       </Stack>
     </>
   );
