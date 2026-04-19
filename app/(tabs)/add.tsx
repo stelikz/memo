@@ -30,6 +30,9 @@ import { nowUnix } from "../../db/types";
 import { LoadingOverlay } from "../../components/LoadingOverlay";
 import { CardPreview } from "../../components/CardPreview";
 import { SoftWarning } from "../../components/SoftWarning";
+import { MeaningCard } from "../../components/MeaningCard";
+import { PolysemyBanner } from "../../components/PolysemyBanner";
+import { getCardById, getCardsByLemma, addUserSentence } from "../../db/queries";
 
 // ── Mock AI (remove when backend is live) ───────────────────────────────────
 
@@ -70,15 +73,26 @@ async function mockAddWord(params: {
   sentence?: string;
 }): Promise<AddWordResult> {
   await new Promise((resolve) => setTimeout(resolve, 3000));
+  const response = mockAIResponse(params.word, params.sentence);
+  const lemma = response.lemma;
+  const existingCards = getCardsByLemma(db, lemma).filter(
+    (c) => c.status === "complete",
+  );
+
+  if (existingCards.length === 0) {
+    return { status: "created", response };
+  }
+
   return {
-    status: "created",
-    response: mockAIResponse(params.word, params.sentence),
+    status: "new_sense",
+    response: { ...response, is_new_sense: true },
+    existingSenseIds: existingCards.map((c) => c.id),
   };
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-type Phase = "form" | "loading" | "success" | "error";
+type Phase = "form" | "loading" | "success" | "error" | "disambiguate";
 type SubmitWarning = null | "no_sentence" | "word_not_in_sentence";
 
 const TARGET_LANG_PATTERNS: Record<string, RegExp> = {
@@ -153,6 +167,7 @@ export default function AddScreen() {
   const [phase, setPhase] = useState<Phase>("form");
   const [aiResult, setAiResult] = useState<AICardResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [existingSenseIds, setExistingSenseIds] = useState<string[]>([]);
 
   // Avoid clipboard privacy banner on iOS by checking hasStringAsync first
   useFocusEffect(
@@ -204,6 +219,7 @@ export default function AddScreen() {
     setAiResult(null);
     setErrorMessage("");
     setSubmitWarning(null);
+    setExistingSenseIds([]);
   };
 
   const handleSubmit = async () => {
@@ -242,8 +258,7 @@ export default function AddScreen() {
           });
 
       switch (result.status) {
-        case "created":
-        case "new_sense": {
+        case "created": {
           saveCardFromAI(
             result.response,
             trimmedSentence || undefined,
@@ -251,6 +266,12 @@ export default function AddScreen() {
           );
           setAiResult(result.response);
           setPhase("success");
+          break;
+        }
+        case "new_sense": {
+          setAiResult(result.response);
+          setExistingSenseIds(result.existingSenseIds);
+          setPhase("disambiguate");
           break;
         }
         case "duplicate": {
@@ -287,6 +308,112 @@ export default function AddScreen() {
             t("loading_polysemy"),
           ]}
         />
+      </SafeAreaView>
+    );
+  }
+
+  // ── Disambiguate phase (Screen 6) ──────────────────────────────────────────
+  if (phase === "disambiguate" && aiResult) {
+    const trimmedSentence = sentence.trim() || undefined;
+    const existingCards = existingSenseIds
+      .map((id) => getCardById(db, id))
+      .filter(Boolean) as NonNullable<ReturnType<typeof getCardById>>[];
+
+    const handleAddAsNewCard = () => {
+      saveCardFromAI(aiResult, trimmedSentence, targetLanguage);
+      setPhase("success");
+    };
+
+    const handleSameMeaning = () => {
+      if (existingCards.length > 0 && trimmedSentence) {
+        addUserSentence(db, existingCards[0].id, trimmedSentence);
+      }
+      resetForm();
+      Alert.alert(t("card_created"), t("duplicate_word_message"));
+    };
+
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50" edges={["top"]}>
+        <ScrollView
+          contentContainerClassName="px-5 pb-8 pt-6"
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="mb-5 flex-row items-center gap-3">
+            <TouchableOpacity onPress={resetForm} activeOpacity={0.7}>
+              <Ionicons name="arrow-back" size={24} color="#111827" />
+            </TouchableOpacity>
+            <Text className="flex-1 text-xl font-bold text-gray-900">
+              {t("new_meaning_detected")}
+            </Text>
+          </View>
+
+          <PolysemyBanner
+            lemma={aiResult.lemma}
+            existingCount={existingCards.length}
+            totalCommonMeanings={aiResult.total_common_meanings}
+            translate={t}
+          />
+
+          {existingCards.length > 0 && (
+            <View className="mt-6">
+              <Text className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                {t("existing_meanings")}
+              </Text>
+              <View className="gap-3">
+                {existingCards.map((card, index) => {
+                  let sentences: string[] = [];
+                  try { sentences = JSON.parse(card.userSentencesJson); } catch {}
+
+                  return (
+                    <MeaningCard
+                      key={card.id}
+                      variant="existing"
+                      label={`${t("definition")} ${index + 1}`}
+                      definitionTarget={card.primaryDefinitionTarget}
+                      definitionNative={card.primaryDefinitionNative}
+                      sentence={sentences[0]}
+                      translate={t}
+                    />
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          <View className="mt-6">
+            <Text className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+              {t("new_meaning_detected")}
+            </Text>
+            <MeaningCard
+              variant="new"
+              definitionTarget={aiResult.primary_definition_target}
+              definitionNative={aiResult.primary_definition_native}
+              sentence={trimmedSentence ?? aiResult.example_sentence}
+              translate={t}
+            />
+          </View>
+
+          <View className="mt-8 gap-3">
+            <TouchableOpacity
+              className="items-center rounded-xl bg-blue-600 py-4"
+              activeOpacity={0.8}
+              onPress={handleAddAsNewCard}
+            >
+              <Text className="text-base font-semibold text-white">
+                {t("add_as_new_card")}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="items-center rounded-xl border border-gray-300 bg-white py-4"
+              activeOpacity={0.8}
+              onPress={handleSameMeaning}
+            >
+              <Text className="text-base font-semibold text-gray-700">
+                {t("same_meaning_add_sentence")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
