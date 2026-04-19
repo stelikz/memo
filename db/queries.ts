@@ -1,4 +1,4 @@
-import { eq, and, lte, inArray, asc, desc, count, sql } from "drizzle-orm";
+import { eq, and, lte, inArray, asc, desc, count, sql, like, or } from "drizzle-orm";
 import { cards } from "./schema";
 import { type DrizzleDB, type CardStatus, CardState, nowUnix } from "./types";
 
@@ -152,6 +152,64 @@ export function getPendingCards(db: DrizzleDB) {
     .from(cards)
     .where(eq(cards.status, "pending"))
     .orderBy(asc(cards.createdAt))
+    .all();
+}
+
+// ── Library ─────────────────────────────────────────────────────────────────
+
+export type LibraryFilter = "all" | "noun" | "verb" | "adjective" | "due";
+export type LibrarySort = "newest" | "alphabetical" | "due_date";
+
+export function getLibraryCards(
+  db: DrizzleDB,
+  options: {
+    search?: string;
+    filter?: LibraryFilter;
+    sort?: LibrarySort;
+  } = {}
+) {
+  const { search, filter = "all", sort = "newest" } = options;
+  const now = nowUnix();
+
+  const conditions = [eq(cards.status, "complete")];
+
+  // Filter by part of speech or due status
+  if (filter === "noun") {
+    conditions.push(eq(cards.partOfSpeech, "noun"));
+  } else if (filter === "verb") {
+    conditions.push(eq(cards.partOfSpeech, "verb"));
+  } else if (filter === "adjective") {
+    conditions.push(eq(cards.partOfSpeech, "adjective"));
+  } else if (filter === "due") {
+    conditions.push(lte(cards.due, now));
+    conditions.push(eq(cards.isSuspended, 0));
+  }
+
+  // Search by lemma or definition
+  if (search && search.trim()) {
+    const term = `%${search.trim()}%`;
+    conditions.push(
+      or(
+        like(cards.lemma, term),
+        like(cards.primaryDefinitionTarget, term),
+        like(cards.primaryDefinitionNative, term),
+      )!
+    );
+  }
+
+  // Sort
+  const orderBy =
+    sort === "alphabetical"
+      ? [asc(cards.lemma)]
+      : sort === "due_date"
+        ? [asc(cards.due)]
+        : [desc(cards.createdAt)];
+
+  return db
+    .select()
+    .from(cards)
+    .where(and(...conditions))
+    .orderBy(...orderBy)
     .all();
 }
 

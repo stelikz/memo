@@ -84,6 +84,38 @@ export const fr: Record<string, string> = {
   add_as_new_card: "Ajouter comme nouvelle carte",
   same_meaning_add_sentence: "Même sens, ajouter la phrase",
 
+  // Library (Screen 10)
+  search_words: "Chercher un mot…",
+  filter_all: "Tous",
+  filter_nouns: "Noms",
+  filter_verbs: "Verbes",
+  filter_adjectives: "Adj",
+  filter_due: "À revoir",
+  sort_newest: "Récents",
+  sort_alphabetical: "A–Z",
+  sort_due_date: "Échéance",
+  state_new: "Nouveau",
+  state_learning: "En cours",
+  state_mature: "Acquis",
+  select: "Sélectionner",
+  no_words_found: "Aucun mot trouvé",
+  try_different_search: "Essayez une autre recherche ou un autre filtre",
+  suspended: "Suspendu",
+
+  // Mass Edit (Screen 11)
+  select_all: "Tout sélectionner",
+  selected_count: "{{count}} sélectionné(s)",
+  reset_progress_action: "Réinitialiser",
+  suspend_action: "Suspendre",
+  delete_action: "Supprimer",
+  confirm_delete: "Supprimer {{count}} cartes ?",
+  confirm_delete_message: "Cette action est irréversible.",
+  confirm_reset: "Réinitialiser {{count}} cartes ?",
+  confirm_reset_message: "Les cartes reviendront à l'état Nouveau.",
+  confirm_suspend: "Suspendre {{count}} cartes ?",
+  confirm_suspend_message: "Les cartes seront retirées de la file de révision.",
+  confirm: "Confirmer",
+
   // Common
   card: "carte",
   cards: "cartes",

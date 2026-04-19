@@ -84,6 +84,38 @@ export const en: Record<string, string> = {
   add_as_new_card: "Add as new card",
   same_meaning_add_sentence: "Same meaning, just add sentence",
 
+  // Library (Screen 10)
+  search_words: "Search words...",
+  filter_all: "All",
+  filter_nouns: "Nouns",
+  filter_verbs: "Verbs",
+  filter_adjectives: "Adj",
+  filter_due: "Due",
+  sort_newest: "Newest",
+  sort_alphabetical: "A–Z",
+  sort_due_date: "Due date",
+  state_new: "New",
+  state_learning: "Learning",
+  state_mature: "Mature",
+  select: "Select",
+  no_words_found: "No words found",
+  try_different_search: "Try a different search or filter",
+  suspended: "Suspended",
+
+  // Mass Edit (Screen 11)
+  select_all: "Select all",
+  selected_count: "{{count}} selected",
+  reset_progress_action: "Reset",
+  suspend_action: "Suspend",
+  delete_action: "Delete",
+  confirm_delete: "Delete {{count}} cards?",
+  confirm_delete_message: "This action cannot be undone.",
+  confirm_reset: "Reset progress for {{count}} cards?",
+  confirm_reset_message: "Cards will return to New state.",
+  confirm_suspend: "Suspend {{count}} cards?",
+  confirm_suspend_message: "Cards will be removed from the review queue.",
+  confirm: "Confirm",
+
   // Common
   card: "card",
   cards: "cards",
