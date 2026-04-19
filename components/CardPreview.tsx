@@ -5,19 +5,13 @@ import { Button } from "./Button";
 import { type AICardResponse } from "../lib/ai";
 import { type TranslateFn } from "../i18n";
 import { RevealableText } from "./RevealableText";
+import { TTS_LOCALES } from "../lib/tts";
 
 interface CardPreviewProps {
   card: AICardResponse;
   targetLanguage: string;
   translate: TranslateFn;
 }
-
-const TTS_LOCALES: Record<string, string> = {
-  fr: "fr-FR",
-  de: "de-DE",
-  es: "es-ES",
-  ja: "ja-JP",
-};
 
 export function CardPreview({
   card,

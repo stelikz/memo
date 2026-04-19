@@ -43,6 +43,7 @@ export function RatingButton({
   label,
   subtitle,
   className,
+  disabled,
   onPressIn,
   onPressOut,
   ...rest
@@ -50,13 +51,16 @@ export function RatingButton({
   const [pressed, setPressed] = useState(false);
 
   const base = "flex-1 items-center rounded-xl border px-2 py-3";
-  const bg = pressed
-    ? pressedContainerStyles[rating]
-    : containerStyles[rating];
+  const bg = disabled
+    ? "bg-gray-100 border-gray-200"
+    : pressed
+      ? pressedContainerStyles[rating]
+      : containerStyles[rating];
 
   return (
     <Pressable
       className={`${base} ${bg} ${className ?? ""}`}
+      disabled={disabled}
       onPressIn={(e) => {
         setPressed(true);
         onPressIn?.(e);
@@ -67,11 +71,15 @@ export function RatingButton({
       }}
       {...rest}
     >
-      <Text className={`text-sm font-semibold ${labelStyles[rating]}`}>
+      <Text
+        className={`text-sm font-semibold ${disabled ? "text-gray-400" : labelStyles[rating]}`}
+      >
         {label}
       </Text>
       {subtitle && (
-        <Text className={`mt-0.5 text-xs ${subtitleStyles[rating]}`}>
+        <Text
+          className={`mt-0.5 text-xs ${disabled ? "text-gray-300" : subtitleStyles[rating]}`}
+        >
           {subtitle}
         </Text>
       )}

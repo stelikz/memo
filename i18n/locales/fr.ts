@@ -61,6 +61,14 @@ export const fr: Record<string, string> = {
   well_done: "Bien joué !",
   review_complete: "Révision terminée",
   cards_reviewed: "Cartes révisées",
+  review_progress: "{{current}} sur {{total}}",
+  rating_again: "À revoir",
+  rating_hard: "Difficile",
+  rating_good: "Bien",
+  rating_easy: "Facile",
+  also_means_footnote: "Vous connaissez aussi ce mot comme :",
+  review_stats: "Statistiques de la session",
+  hear_sentence: "Appuyez sur la phrase pour l'écouter",
 
   // Card details
   definition: "Définition",

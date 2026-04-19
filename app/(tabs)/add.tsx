@@ -35,10 +35,7 @@ function looksLikeTargetLanguage(text: string, lang: string): boolean {
   return text.trim().length > 0;
 }
 
-/** Strip diacritics and lowercase for accent-insensitive comparison. */
-function normalise(s: string): string {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-}
+import { normalizeAccents as normalise } from "../../lib/normalize";
 
 // ── Component ───────────────────────────────────────────────────────────────
 

@@ -61,6 +61,14 @@ export const en: Record<string, string> = {
   well_done: "Well done!",
   review_complete: "Review complete",
   cards_reviewed: "Cards reviewed",
+  review_progress: "{{current}} of {{total}}",
+  rating_again: "Again",
+  rating_hard: "Hard",
+  rating_good: "Good",
+  rating_easy: "Easy",
+  also_means_footnote: "You also know this word as:",
+  review_stats: "Session stats",
+  hear_sentence: "Tap sentence to hear it",
 
   // Card details
   definition: "Definition",
