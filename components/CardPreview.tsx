@@ -1,6 +1,7 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
+import { Button } from "./Button";
 import { type AICardResponse } from "../lib/ai";
 import { type TranslateFn } from "../i18n";
 import { RevealableText } from "./RevealableText";
@@ -18,7 +19,11 @@ const TTS_LOCALES: Record<string, string> = {
   ja: "ja-JP",
 };
 
-export function CardPreview({ card, targetLanguage, translate: t }: CardPreviewProps) {
+export function CardPreview({
+  card,
+  targetLanguage,
+  translate: t,
+}: CardPreviewProps) {
   const speak = () => {
     Speech.speak(card.lemma, {
       language: TTS_LOCALES[targetLanguage] ?? targetLanguage,
@@ -31,9 +36,9 @@ export function CardPreview({ card, targetLanguage, translate: t }: CardPreviewP
       <View className="flex-row items-center gap-3">
         <Text className="text-2xl font-bold text-gray-900">{card.lemma}</Text>
         <Text className="text-sm text-gray-400">{card.pronunciation_ipa}</Text>
-        <TouchableOpacity onPress={speak} hitSlop={8}>
+        <Button variant="ghost" className="bg-transparent py-0" onPress={speak} hitSlop={8}>
           <Ionicons name="volume-medium-outline" size={22} color="#2563eb" />
-        </TouchableOpacity>
+        </Button>
       </View>
 
       {/* Part of speech + encountered form */}
@@ -63,10 +68,7 @@ export function CardPreview({ card, targetLanguage, translate: t }: CardPreviewP
           </Text>
           <View className="flex-row flex-wrap gap-2">
             {card.synonyms.map((s) => (
-              <View
-                key={s.word}
-                className="rounded-full bg-blue-50 px-3 py-1"
-              >
+              <View key={s.word} className="rounded-full bg-blue-50 px-3 py-1">
                 <Text className="text-sm text-blue-700">
                   {s.word}
                   {s.register ? ` (${s.register})` : ""}

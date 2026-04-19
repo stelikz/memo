@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { Text } from "react-native";
+import { Button } from "./Button";
 
 interface RevealableTextProps {
   hiddenLabel: string;
@@ -15,9 +16,9 @@ export function RevealableText({
   const [revealed, setRevealed] = useState(false);
 
   return (
-    <TouchableOpacity
-      className="mt-4 rounded-xl border border-dashed border-gray-300 px-4 py-3"
-      activeOpacity={0.7}
+    <Button
+      variant="ghost"
+      className="mt-4 items-start border border-dashed border-gray-300 bg-transparent px-4 py-3"
       onPress={() => setRevealed((v) => !v)}
     >
       <Text className="text-sm text-gray-500">
@@ -28,6 +29,6 @@ export function RevealableText({
           {content}
         </Text>
       )}
-    </TouchableOpacity>
+    </Button>
   );
 }

@@ -1,4 +1,5 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, View } from "react-native";
+import { Button } from "./Button";
 
 interface WordListItemProps {
   lemma: string;
@@ -14,10 +15,10 @@ export function WordListItem({
   onPress,
 }: WordListItemProps) {
   return (
-    <TouchableOpacity
-      className="flex-row items-center rounded-xl bg-white px-4 py-3"
+    <Button
+      variant="ghost"
+      className="flex-row items-center bg-white px-4 py-3"
       onPress={onPress}
-      activeOpacity={0.7}
     >
       <View className="flex-1">
         <View className="flex-row items-center gap-2">
@@ -30,6 +31,6 @@ export function WordListItem({
           {definition}
         </Text>
       </View>
-    </TouchableOpacity>
+    </Button>
   );
 }
