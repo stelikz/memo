@@ -14,21 +14,21 @@ The accent in Mémo nods to the app's French origins while remaining language-ne
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | React Native + Expo (managed workflow) |
-| Language | TypeScript |
-| Local DB | expo-sqlite + Drizzle ORM |
-| Spaced Repetition | ts-fsrs |
-| State Management | Zustand |
-| Styling | NativeWind (Tailwind for RN) |
-| Notifications | expo-notifications (local) |
-| Share Sheet | expo-share-intent |
-| TTS | expo-speech (native engine, offline) |
-| Localization | i18n-js or expo-localization + custom locale maps |
-| Camera (v1.1) | expo-camera |
-| Backend | Supabase Edge Functions (AI proxy only — no auth/sync in v1) |
-| AI Provider | Google Gemini API (via Supabase Edge Function) |
+| Layer             | Technology                                                   |
+| ----------------- | ------------------------------------------------------------ |
+| Framework         | React Native + Expo (managed workflow)                       |
+| Language          | TypeScript                                                   |
+| Local DB          | expo-sqlite + Drizzle ORM                                    |
+| Spaced Repetition | ts-fsrs                                                      |
+| State Management  | Zustand                                                      |
+| Styling           | NativeWind (Tailwind for RN)                                 |
+| Notifications     | expo-notifications (local)                                   |
+| Share Sheet       | expo-share-intent                                            |
+| TTS               | expo-speech (native engine, offline)                         |
+| Localization      | i18n-js or expo-localization + custom locale maps            |
+| Camera (v1.1)     | expo-camera                                                  |
+| Backend           | Supabase Edge Functions (AI proxy only — no auth/sync in v1) |
+| AI Provider       | Google Gemini API (via Supabase Edge Function)               |
 
 ---
 
@@ -45,7 +45,7 @@ The accent in Mémo nods to the app's French origins while remaining language-ne
 5. App checks: does a card with the same `lemma` already exist?
    - **No existing card**: save as new card, show confirmation
    - **Existing card, same meaning**: ask user — "You already have this word with this meaning. Add this sentence as another example?" If yes, append the new sentence to the existing card's `user_sentences_json` array
-   - **Existing card, different meaning**: show "You already know *louer* = to rent. This is a different meaning: to praise." User taps [Add as new card] or [Same meaning, just add sentence]
+   - **Existing card, different meaning**: show "You already know _louer_ = to rent. This is a different meaning: to praise." User taps [Add as new card] or [Same meaning, just add sentence]
 6. Card saved to SQLite with FSRS initial state
 
 ### Reviewing Cards
@@ -102,6 +102,7 @@ App → HTTPS → Supabase Edge Function → Google Gemini API
 ```
 
 The Edge Function is a thin proxy:
+
 - Receives word + sentence + existing meanings for that lemma (if any)
 - Forwards to Gemini with a structured prompt
 - Returns the JSON response to the app
@@ -154,43 +155,51 @@ Given a word, sentence, and target language, the AI must:
 
 ```typescript
 interface AICardResponse {
-  lemma: string;                    // e.g. "aller"
-  encountered_form: string;         // e.g. "vais"
-  part_of_speech: "noun" | "verb" | "adjective" | "adverb" | "preposition" | "conjunction" | "pronoun" | "interjection";
-  pronunciation_ipa: string;        // e.g. "a.le"
-  
+  lemma: string; // e.g. "aller"
+  encountered_form: string; // e.g. "vais"
+  part_of_speech:
+    | "noun"
+    | "verb"
+    | "adjective"
+    | "adverb"
+    | "preposition"
+    | "conjunction"
+    | "pronoun"
+    | "interjection";
+  pronunciation_ipa: string; // e.g. "a.le"
+
   // Language-specific grammar — shape varies by target language
   // French example: { gender: "masculine", verb_auxiliary: "être", is_pronominal: false }
   // German example: { gender: "neuter", case_government: "accusative", plural: "Häuser" }
   // Japanese example: { reading: "たべる", pitch_accent: "0", jlpt_level: "N5" }
   grammar: Record<string, any>;
-  
+
   // Primary meaning (based on provided sentence context)
-  primary_definition_target: string;  // in the target language
-  primary_definition_native: string;  // in the user's native language
+  primary_definition_target: string; // in the target language
+  primary_definition_native: string; // in the user's native language
   example_sentence: string;
-  corrected_sentence: string | null;  // user's sentence with accents/diacritics fixed, null if no sentence provided
-  
+  corrected_sentence: string | null; // user's sentence with accents/diacritics fixed, null if no sentence provided
+
   // Polysemy
-  total_common_meanings: number;    // e.g. 2 for "louer"
-  is_new_sense: boolean | null;     // null if no existing meanings provided
+  total_common_meanings: number; // e.g. 2 for "louer"
+  is_new_sense: boolean | null; // null if no existing meanings provided
   other_meanings: Array<{
     definition_target: string;
     definition_native: string;
     example_sentence: string;
   }>;
-  
+
   // Related words
   synonyms: Array<{
     word: string;
-    register: string;               // language-appropriate register label
+    register: string; // language-appropriate register label
   }>;
   antonym: {
     word: string;
   } | null;
-  
+
   // Irregularities worth noting
-  irregular_forms: string | null;   // e.g. "plural: yeux" or "past participle: été"
+  irregular_forms: string | null; // e.g. "plural: yeux" or "past participle: été"
 }
 ```
 
@@ -205,48 +214,48 @@ cards {
   id: text (UUID, primary key)
   created_at: integer (unix timestamp)
   updated_at: integer (unix timestamp)
-  
+
   // Card status: "complete" or "pending" (offline queue — word+sentence saved, awaiting AI)
   status: text                      // "complete" (default), "pending"
-  
+
   // Language — intentionally text, not enum. SQLite has no real enum type
   // (Drizzle would fake it with a CHECK constraint), and adding a new
   // language would require a schema migration. Validate in TypeScript
   // against LANGUAGE_CONFIGS keys instead — that's the source of truth.
   target_language: text              // "fr", "de", "es", "ja", etc.
-  
+
   // Word identity
   lemma: text                       // "aller" — shared across senses
   sense_id: text (unique)           // "aller_1", "aller_2" — app-generated, deterministic
   encountered_form: text            // "vais"
   part_of_speech: text
   pronunciation_ipa: text
-  
+
   // Grammar metadata — language-specific, stored as flexible JSON
   // French: { gender, verb_auxiliary, is_pronominal }
   // German: { gender, case_government, plural_form }
   // Japanese: { reading, pitch_accent, jlpt_level }
   grammar_json: text                // JSON string, shape varies by language
-  
+
   // Definitions
   primary_definition_target: text   // definition in the target language
   primary_definition_native: text   // definition in the user's native language
-  
+
   // Context — multiple user sentences supported (JSON array of strings)
   user_sentences_json: text         // e.g. '["Je loue un appartement.", "On loue des voitures."]'
   example_sentence: text            // AI-generated example sentence
-  
+
   // Polysemy
   total_common_meanings: integer
   other_meanings_json: text         // JSON string of other_meanings array
-  
+
   // Related words
   synonyms_json: text               // JSON string of synonyms array
   antonym: text | null
-  
+
   // Irregular forms
   irregular_forms: text | null
-  
+
   // FSRS scheduling fields
   due: integer (unix timestamp)
   stability: real
@@ -258,7 +267,7 @@ cards {
   state: integer                    // 0=New, 1=Learning, 2=Review, 3=Relearning
   last_review: integer | null (unix timestamp)
   learning_steps: integer           // ts-fsrs v5: which step in learning/relearning sequence
-  
+
   // Suspension — independent flag, never touches FSRS state
   is_suspended: integer             // 0=active (default), 1=suspended
 }
@@ -292,6 +301,7 @@ app_settings {
 ## Screen Map
 
 ### 1. Home Screen
+
 - Count of cards due today (tappable → starts review)
 - Total cards count (tappable → opens word library)
 - Day streak
@@ -300,6 +310,7 @@ app_settings {
 - All UI labels in target language by default
 
 ### 2. Add Word Screen
+
 - Word input field (required)
 - Sentence input field (encouraged, with label in target language e.g. "Où l'avez-vous vu?")
 - **Word-in-sentence validation**: if a sentence is provided, check that the word appears in it (accent-insensitive, case-insensitive). If not found, show a soft warning — the user can tap again to proceed anyway
@@ -308,6 +319,7 @@ app_settings {
 - Camera scan option (v1.1)
 
 ### 3. Share Intent Word Selection Screen
+
 - Opened automatically when text is shared from another app
 - If shared text is a single word: skip directly to card generation
 - If shared text is a sentence/paragraph: display text with every word tappable
@@ -318,10 +330,12 @@ app_settings {
 - [Cancel] button → dismisses
 
 ### 4. AI Loading Screen
+
 - Spinner with word being processed
 - Step indicators: identifying lemma → finding definition → generating synonyms → checking polysemy
 
 ### 5. Card Created Confirmation Screen
+
 - Success state with card preview (definition, synonyms, antonym)
 - Speaker icon next to the lemma — tap to hear pronunciation via TTS
 - Native-language translation hidden by default (tappable to reveal)
@@ -329,6 +343,7 @@ app_settings {
 - [Add another word] / [Go home] actions
 
 ### 6. Polysemy Disambiguation Screen
+
 - Shown when the entered word matches an existing lemma with a different meaning
 - Info banner showing "This is the Nth meaning of [word] you've learned. This word has roughly X common meanings."
 - Shows existing meaning card(s)
@@ -336,6 +351,7 @@ app_settings {
 - Two actions: [Add as new card] / [Same meaning, just add sentence]
 
 ### 7. Review Screen — Card Front
+
 - Progress bar and count (e.g. "5 of 18")
 - Card area showing sentence with target word highlighted
 - If no sentence: word displayed alone, centered
@@ -343,7 +359,9 @@ app_settings {
 - Rating buttons greyed out until card is flipped
 
 ### 8. Review Screen — Card Back
+
 - Sentence with highlighted word (context)
+- if there are multiple sentences, show the latest sentence in the card front
 - Lemma + IPA pronunciation + grammar badge + speaker icon (tap to hear word via TTS)
 - Tap sentence area to hear the full sentence read aloud
 - Definition in target language
@@ -354,12 +372,14 @@ app_settings {
 - Rating buttons: Again / Hard / Good / Easy (with next review interval shown)
 
 ### 9. Review Complete Screen
+
 - "Bien joué!" (or equivalent in target language) with success icon
 - Session stats: cards reviewed, streak count
 - Breakdown bar: again/hard/good/easy proportions
 - [Go home] / [Add a word] actions
 
 ### 10. Word Library Screen
+
 - Accessed by tapping total cards count on home screen
 - Search bar for filtering words
 - Filter chips: All, Nouns, Verbs, Adjectives, Due
@@ -369,6 +389,7 @@ app_settings {
 - Tapping a word opens full card detail (editable, with TTS playback)
 
 ### 11. Mass Edit Mode
+
 - Checkboxes appear next to each word
 - Selection count in header
 - "Select all" option
@@ -379,6 +400,7 @@ app_settings {
 - "Cancel" to exit selection mode
 
 ### 12. Settings Screen
+
 - Daily reminder toggle + time picker
 - "Show English by default" toggle (controls native-language translation visibility on card back)
 - Target language selector (French for v1, extensible)
@@ -386,6 +408,7 @@ app_settings {
 - Reset all progress (danger action)
 
 ### Error States (inline, not separate screens)
+
 - **AI call fails** (network error, server error): show retry button with error message on Add Word screen
 - **AI returns invalid JSON**: show error with option to retry or cancel
 - **No internet on Add Word screen**: offer to save as pending (offline queue) — card will be processed when connectivity returns
@@ -396,6 +419,7 @@ app_settings {
 ## v1 Scope (Ship This First)
 
 **In scope:**
+
 - Add word + sentence → AI generates card → save to SQLite
 - Share sheet integration — highlight text in any app, share to our app, tap the word to learn, save (primary input method)
 - Polysemy detection and linked sense cards
@@ -411,21 +435,25 @@ app_settings {
 - Works on iOS (developer's own phone via TestFlight or dev build)
 
 **v1.1 (next iteration):**
+
 - Camera OCR for physical books (point, snap, tap word)
 
 **v2 — Practice Mode (Contextual Fill-in-the-Blank):**
+
 - See "Practice Mode" section below for full design
 - Barron's 1100-style exercises using words the user already has
 - AI generates paragraphs from 5 words in the user's card bank
 - Separate from flashcard review — a "Practice" tab alongside "Review"
 
 **v3 — Vocab Discovery:**
+
 - See "Vocab Discovery" section below for full design
 - CEFR-leveled French frequency lists embedded in the app
 - Proactive word suggestions based on user's current level
 - Can also feed into Practice Mode (mix known words + new suggested words)
 
 **Out of scope (future):**
+
 - User accounts / authentication
 - Cross-device sync
 - Deck organization
@@ -516,6 +544,7 @@ npm install drizzle-orm ts-fsrs zustand nativewind tailwindcss i18n-js
 SQLite runs on the device as an embedded database — it's a file on the phone. Postgres runs on a server and requires a network connection. For an offline-first app where the most frequent interaction (reviewing cards) must work without internet, SQLite is the only option.
 
 When sync/multi-device support is added (future), the architecture becomes:
+
 - **SQLite on device**: source of truth for all reads and writes during normal use
 - **Postgres on Supabase**: sync target — a background process reconciles the two when online
 - The app never reads from Postgres directly during review; it only syncs to it
@@ -547,6 +576,7 @@ This is a "Practice" tab alongside the "Review" tab. Flashcards are daily discip
 ### AI Prompt Requirements
 
 The prompt must instruct the AI to:
+
 - Write a coherent, natural-sounding paragraph — not 5 disconnected sentences
 - Provide context clues that are **inferrable but not obvious** (describe through consequences, associations, and typical usage — never restate the definition)
 - Adapt clue difficulty based on provided FSRS stability scores: subtle clues for well-known words, more explicit context for struggling words
@@ -558,7 +588,7 @@ The prompt must instruct the AI to:
 Word bank: mâtin (mastiff), louer (to rent), voler (to fly), éphémère (fleeting), soutenir (to support)
 
 Paragraph:
-"The family decided to ____ a house in the countryside for the summer. Their first morning there, they watched a hawk ____ over the fields — a beautiful but ____ moment, gone in seconds. Their neighbor warned them about his enormous ____, a guard dog that weighed more than most children. Despite the occasional scare, the whole family agreed the experience was worth it, and they would ____ anyone who wanted to try country living."
+"The family decided to \_**\_ a house in the countryside for the summer. Their first morning there, they watched a hawk \_\_** over the fields — a beautiful but \_**\_ moment, gone in seconds. Their neighbor warned them about his enormous \_\_**, a guard dog that weighed more than most children. Despite the occasional scare, the whole family agreed the experience was worth it, and they would \_\_\_\_ anyone who wanted to try country living."
 
 ### Design Notes
 
@@ -578,6 +608,7 @@ The app proactively suggests new French words to learn, rather than only capturi
 ### Data Source
 
 Embed a French frequency list tagged by CEFR level (A1–C2). Candidate sources:
+
 - **FLElex**: French frequency list based on textbook corpora, CEFR-tagged
 - **Lexique 3**: Large French lexical database from academic research (free)
 - **Kelly list**: Corpus-based frequency list for French (open)
@@ -602,11 +633,13 @@ Vocab Discovery can feed into Practice Mode: generate an exercise with 3 known w
 ### Design Principle
 
 v1 ships with French only, but the architecture avoids hardcoding French assumptions. Adding a new language should require:
+
 1. A new locale map for UI strings (see "App UI Language" below)
 2. A language-specific grammar config telling the AI prompt which grammar fields to request
 3. Optionally, a CEFR frequency list for Vocab Discovery (v3)
 
 ### What is language-agnostic already
+
 - The FSRS algorithm (pure math, no language dependency)
 - SQLite schema (`grammar_json` stores any structure, `target_language` field on each card)
 - The card creation pipeline (word + sentence → AI → structured JSON → save)
@@ -614,6 +647,7 @@ v1 ships with French only, but the architecture avoids hardcoding French assumpt
 - Polysemy detection (lemma matching works in any language)
 
 ### What needs per-language configuration
+
 - **Grammar metadata shape**: French needs `{ gender, verb_auxiliary, is_pronominal }`. German needs `{ gender, case_government, plural }`. Japanese needs `{ reading, pitch_accent, jlpt_level }`. Stored in a language config map that the AI prompt references.
 - **Grammar display on cards**: The card back renders grammar info from `grammar_json`. A per-language renderer decides what to show. French: "verbe · avoir". German: "Nomen · n. · Akk.". Japanese: "動詞 · たべる".
 - **Word boundary detection in share sheet**: Latin-script languages (French, German, Spanish) can split on spaces. Japanese/Chinese need AI-assisted word segmentation.
@@ -661,6 +695,7 @@ const LANGUAGE_CONFIGS: Record<string, LanguageConfig> = {
 ### Principle
 
 The app UI is displayed in the target language by default to maximize immersion. Navigation, labels, prompts, and messages are all in the language the user is learning. The "Show English by default" toggle in settings switches both:
+
 - Card back: native-language translation visible by default
 - App UI: all labels switch to the user's native language
 
