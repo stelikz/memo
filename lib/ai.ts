@@ -18,6 +18,7 @@ export interface AICardResponse {
   primary_definition_target: string;
   primary_definition_native: string;
   example_sentence: string;
+  corrected_sentence: string | null;
   total_common_meanings: number;
   is_new_sense: boolean | null;
   other_meanings: Array<{
