@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { Text, Pressable, type PressableProps } from "react-native";
 
 type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
@@ -52,20 +52,31 @@ export function Button({
   variant = "primary",
   disabled,
   className,
+  onPressIn,
+  onPressOut,
   ...rest
 }: ButtonProps) {
+  const [pressed, setPressed] = useState(false);
+
+  const base = "items-center rounded-xl py-4";
+  const bg = disabled
+    ? disabledContainerStyles[variant]
+    : pressed
+      ? pressedContainerStyles[variant]
+      : containerStyles[variant];
+
   return (
     <Pressable
-      className={({ pressed }) => {
-        const base = "items-center rounded-xl py-4";
-        const bg = disabled
-          ? disabledContainerStyles[variant]
-          : pressed
-            ? pressedContainerStyles[variant]
-            : containerStyles[variant];
-        return `${base} ${bg} ${className ?? ""}`;
-      }}
+      className={`${base} ${bg} ${className ?? ""}`}
       disabled={disabled}
+      onPressIn={(e) => {
+        setPressed(true);
+        onPressIn?.(e);
+      }}
+      onPressOut={(e) => {
+        setPressed(false);
+        onPressOut?.(e);
+      }}
       {...rest}
     >
       {children ?? (

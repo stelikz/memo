@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Text, Pressable, type PressableProps } from "react-native";
 
 type Rating = "again" | "hard" | "good" | "easy";
@@ -42,16 +43,27 @@ export function RatingButton({
   label,
   subtitle,
   className,
+  onPressIn,
+  onPressOut,
   ...rest
 }: RatingButtonProps) {
+  const [pressed, setPressed] = useState(false);
+
+  const base = "flex-1 items-center rounded-xl border px-2 py-3";
+  const bg = pressed
+    ? pressedContainerStyles[rating]
+    : containerStyles[rating];
+
   return (
     <Pressable
-      className={({ pressed }) => {
-        const base = "flex-1 items-center rounded-xl border px-2 py-3";
-        const bg = pressed
-          ? pressedContainerStyles[rating]
-          : containerStyles[rating];
-        return `${base} ${bg} ${className ?? ""}`;
+      className={`${base} ${bg} ${className ?? ""}`}
+      onPressIn={(e) => {
+        setPressed(true);
+        onPressIn?.(e);
+      }}
+      onPressOut={(e) => {
+        setPressed(false);
+        onPressOut?.(e);
       }}
       {...rest}
     >
