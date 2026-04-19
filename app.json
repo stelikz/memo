@@ -26,9 +26,11 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "scheme": "memo",
     "plugins": [
       "expo-sqlite",
-      "expo-localization"
+      "expo-localization",
+      "expo-router"
     ]
   }
 }

@@ -124,7 +124,7 @@ const fetched1 = getCardById(db, card1.id);
 assert(fetched1 !== undefined, "Card exists after insert");
 assert(fetched1?.lemma === "louer", `Lemma is "louer"`);
 assert(fetched1?.senseId === "louer_to_rent", `Sense ID is "louer_to_rent"`);
-assert(fetched1?.createdAt > 0, "createdAt was set");
+assert(fetched1?.createdAt !== undefined && fetched1?.createdAt > 0, "createdAt was set");
 assert(fetched1?.status === "complete", "Status defaults to complete");
 assert(fetched1?.isSuspended === 0, "isSuspended defaults to 0");
 assert(fetched1?.learningSteps === 0, "learningSteps defaults to 0");
