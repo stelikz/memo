@@ -213,6 +213,65 @@ export function getLibraryCards(
     .all();
 }
 
+/**
+ * Count mature cards (FSRS state = Review).
+ */
+export function countMatureCards(db: DrizzleDB) {
+  const result = db
+    .select({ count: count() })
+    .from(cards)
+    .where(
+      and(
+        eq(cards.status, "complete"),
+        eq(cards.state, CardState.Review),
+      )
+    )
+    .get();
+  return result?.count ?? 0;
+}
+
+/**
+ * Get all complete cards for export.
+ */
+export function getAllCardsForExport(db: DrizzleDB) {
+  return db
+    .select()
+    .from(cards)
+    .where(eq(cards.status, "complete"))
+    .orderBy(asc(cards.createdAt))
+    .all();
+}
+
+/**
+ * Reset FSRS progress for ALL cards.
+ */
+export function resetAllProgress(db: DrizzleDB) {
+  const now = nowUnix();
+  return db
+    .update(cards)
+    .set(fsrsResetFields(now))
+    .where(eq(cards.status, "complete"))
+    .run();
+}
+
+// ── Shared helpers ──────────────────────────────────────────────────────────
+
+function fsrsResetFields(now: number) {
+  return {
+    due: now,
+    stability: 0,
+    difficulty: 0,
+    elapsedDays: 0,
+    scheduledDays: 0,
+    reps: 0,
+    lapses: 0,
+    state: CardState.New,
+    lastReview: null,
+    learningSteps: 0,
+    updatedAt: now,
+  };
+}
+
 // ── Update ───────────────────────────────────────────────────────────────────
 
 export interface ReviewUpdate {
@@ -322,19 +381,7 @@ export function bulkResetProgress(db: DrizzleDB, ids: string[]) {
   const now = nowUnix();
   return db
     .update(cards)
-    .set({
-      due: now,
-      stability: 0,
-      difficulty: 0,
-      elapsedDays: 0,
-      scheduledDays: 0,
-      reps: 0,
-      lapses: 0,
-      state: CardState.New,
-      lastReview: null,
-      learningSteps: 0,
-      updatedAt: now,
-    })
+    .set(fsrsResetFields(now))
     .where(inArray(cards.id, ids))
     .run();
 }
