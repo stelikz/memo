@@ -44,18 +44,34 @@ const SORTS: { key: LibrarySort; labelKey: string }[] = [
 
 function getStateBadge(
   state: number,
-  t: (key: string) => string
+  t: (key: string) => string,
 ): { label: string; color: string; bg: string } {
   switch (state) {
     case CardState.New:
-      return { label: t("state_new"), color: "text-blue-700", bg: "bg-blue-100" };
+      return {
+        label: t("state_new"),
+        color: "text-blue-700",
+        bg: "bg-blue-100",
+      };
     case CardState.Learning:
     case CardState.Relearning:
-      return { label: t("state_learning"), color: "text-amber-700", bg: "bg-amber-100" };
+      return {
+        label: t("state_learning"),
+        color: "text-amber-700",
+        bg: "bg-amber-100",
+      };
     case CardState.Review:
-      return { label: t("state_mature"), color: "text-green-700", bg: "bg-green-100" };
+      return {
+        label: t("state_mature"),
+        color: "text-green-700",
+        bg: "bg-green-100",
+      };
     default:
-      return { label: t("state_new"), color: "text-blue-700", bg: "bg-blue-100" };
+      return {
+        label: t("state_new"),
+        color: "text-blue-700",
+        bg: "bg-blue-100",
+      };
   }
 }
 
@@ -104,13 +120,11 @@ const LibraryRow = memo(function LibraryRow({
           <Text className="text-base font-semibold text-gray-900">
             {item.lemma}
           </Text>
-          <Text className="text-xs text-gray-400">
-            {item.partOfSpeech}
-          </Text>
+          <Text className="text-xs text-gray-400">{item.partOfSpeech}</Text>
           {item.totalCommonMeanings > 1 && (
-            <View className="rounded-full bg-purple-100 px-1.5 py-0.5">
-              <Text className="text-[10px] font-medium text-purple-700">
-                ×{item.totalCommonMeanings}
+            <View className="rounded bg-amber-100 px-1.5 py-0.5">
+              <Text className="text-[10px] font-medium text-amber-700">
+                {item.totalCommonMeanings} {t("meanings_short")}
               </Text>
             </View>
           )}
@@ -166,7 +180,7 @@ export default function LibraryScreen() {
   useFocusEffect(
     useCallback(() => {
       loadCards();
-    }, [loadCards])
+    }, [loadCards]),
   );
 
   const filteredCount = allCards.length;
@@ -226,27 +240,36 @@ export default function LibraryScreen() {
             loadCards();
           },
         },
-      ]
+      ],
     );
   }
 
   function handleResetProgress() {
     confirmBulkAction(
-      "confirm_reset", "confirm_reset_message", "confirm", "default",
+      "confirm_reset",
+      "confirm_reset_message",
+      "confirm",
+      "default",
       (ids) => bulkResetProgress(db, ids),
     );
   }
 
   function handleSuspend() {
     confirmBulkAction(
-      "confirm_suspend", "confirm_suspend_message", "confirm", "default",
+      "confirm_suspend",
+      "confirm_suspend_message",
+      "confirm",
+      "default",
       (ids) => bulkSuspend(db, ids),
     );
   }
 
   function handleDelete() {
     confirmBulkAction(
-      "confirm_delete", "confirm_delete_message", "delete", "destructive",
+      "confirm_delete",
+      "confirm_delete_message",
+      "delete",
+      "destructive",
       (ids) => bulkDelete(db, ids),
     );
   }
@@ -261,7 +284,7 @@ export default function LibraryScreen() {
         router.push(`/card-detail?id=${id}` as any);
       }
     },
-    [selectMode, toggleSelect, router]
+    [selectMode, toggleSelect, router],
   );
 
   const handleRowLongPress = useCallback(
@@ -271,7 +294,7 @@ export default function LibraryScreen() {
         toggleSelect(id);
       }
     },
-    [selectMode, enterSelectMode, toggleSelect]
+    [selectMode, enterSelectMode, toggleSelect],
   );
 
   const renderItem = useCallback(
@@ -285,7 +308,7 @@ export default function LibraryScreen() {
         onLongPress={handleRowLongPress}
       />
     ),
-    [selectMode, selectedIds, t, handleRowPress, handleRowLongPress]
+    [selectMode, selectedIds, t, handleRowPress, handleRowLongPress],
   );
 
   const handleSortButtonLayout = useCallback((e: LayoutChangeEvent) => {
@@ -295,17 +318,19 @@ export default function LibraryScreen() {
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={["top"]}>
       <View className="flex-row items-center justify-between px-5 pb-2 pt-3">
-        <Button
-          variant="ghost"
-          className="h-10 w-10 items-center justify-center rounded-full"
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={22} color="#111827" />
-        </Button>
-
-        <Text className="text-lg font-bold text-gray-900">
-          {t("my_words")}
-        </Text>
+        <View className="flex-row items-center b">
+          <Button
+            variant="ghost"
+            className="mr-3 items-center justify-center bg-transparent"
+            onPress={() => router.back()}
+          >
+            <Ionicons name="chevron-back" size={22} color="#6b7280" />
+          </Button>
+          <Text className="text-lg font-medium text-gray-900">
+            {t("my_words")}
+          </Text>
+          <Text className="ml-2 text-sm text-gray-400">{filteredCount}</Text>
+        </View>
 
         <Button
           variant="ghost"
@@ -352,13 +377,13 @@ export default function LibraryScreen() {
       </View>
 
       <View
-        className="mb-2 flex-row items-center justify-between px-5"
+        className="mb-2 flex-row items-center justify-between bg-white px-5"
         onLayout={handleSortButtonLayout}
       >
         {selectMode ? (
           <Button
             variant="ghost"
-            className="flex-row items-center gap-1 rounded-lg px-2 py-1"
+            className="flex-row items-center gap-1 rounded-lg px-2 py-1 bg-white"
             onPress={toggleSelectAll}
           >
             <Ionicons
@@ -366,36 +391,34 @@ export default function LibraryScreen() {
               size={18}
               color={allSelected ? "#2563eb" : "#9ca3af"}
             />
-            <Text className="text-sm text-gray-600">
-              {t("select_all")}
-            </Text>
+            <Text className="text-sm text-gray-600">{t("select_all")}</Text>
           </Button>
-        ) : (
-          <View />
-        )}
+        ) : null}
 
         <Button
           variant="ghost"
-          className="flex-row items-center gap-1 rounded-lg px-2 py-1"
+          className="flex-row items-center gap-1 rounded-lg px-2 py-1 bg-white"
           onPress={() => setShowSortMenu(!showSortMenu)}
         >
-          <Ionicons name="swap-vertical-outline" size={16} color="#6b7280" />
-          <Text className="text-sm text-gray-500">
-            {t(SORTS.find((s) => s.key === sort)!.labelKey)}
+          <Text className="text-xs text-gray-400">
+            {t("sorted_by")}{" "}
+            <Text className="text-xs text-blue-500">
+              {t(SORTS.find((s) => s.key === sort)!.labelKey)}
+            </Text>
           </Text>
         </Button>
       </View>
 
       {showSortMenu && (
         <View
-          className="absolute right-5 z-50 rounded-xl bg-white py-1 shadow-lg"
+          className="absolute left-5 z-50 rounded-xl bg-white py-1 shadow-lg"
           style={{ top: sortButtonY }}
         >
           {SORTS.map((s) => (
             <Button
               key={s.key}
               variant="ghost"
-              className={`px-4 py-2.5 ${sort === s.key ? "bg-blue-50" : ""}`}
+              className={`px-4 bg-white${sort === s.key ? "bg-blue-50" : ""}`}
               onPress={() => {
                 setSort(s.key);
                 setShowSortMenu(false);
