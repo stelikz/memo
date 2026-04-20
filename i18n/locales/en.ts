@@ -7,7 +7,7 @@ export const en: Record<string, string> = {
   // Home screen
   home_greeting: "Hello!",
   cards_due_today: "Due today",
-  total_cards: "Total",
+  total_cards: "Total words",
   day_streak: "Streak",
   day_streak_unit: "days",
   start_review: "Start review",

@@ -5,11 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocale } from "../../i18n";
 import { useSettingsStore } from "../../stores/settings";
 import { db } from "../../db/client";
-import {
-  countAllCards,
-  countDueCards,
-  getRecentCards,
-} from "../../db/queries";
+import { countAllCards, countDueCards, getRecentCards } from "../../db/queries";
 import { StatCard } from "../../components/StatCard";
 import { SectionHeader } from "../../components/SectionHeader";
 import { WordListItem } from "../../components/WordListItem";
@@ -27,7 +23,9 @@ export default function HomeScreen() {
 
   const [totalCards, setTotalCards] = useState(0);
   const [dueCount, setDueCount] = useState(0);
-  const [recentCards, setRecentCards] = useState<ReturnType<typeof getRecentCards>>([]);
+  const [recentCards, setRecentCards] = useState<
+    ReturnType<typeof getRecentCards>
+  >([]);
 
   useEffect(() => {
     hydrate();
@@ -61,9 +59,7 @@ export default function HomeScreen() {
                 icon="book-outline"
                 iconColor="#f59e0b"
                 onPress={
-                  dueCount > 0
-                    ? () => router.push("/review" as any)
-                    : undefined
+                  dueCount > 0 ? () => router.push("/review" as any) : undefined
                 }
               />
               <StatCard
@@ -92,9 +88,7 @@ export default function HomeScreen() {
             lemma={item.lemma}
             partOfSpeech={item.partOfSpeech}
             definition={item.primaryDefinitionTarget}
-            onPress={() =>
-              router.push(`/card-detail?id=${item.id}` as any)
-            }
+            onPress={() => router.push(`/card-detail?id=${item.id}` as any)}
           />
         )}
         ListEmptyComponent={
