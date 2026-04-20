@@ -34,6 +34,7 @@ export default function RootLayout() {
         <Stack.Screen name="add-success" />
         <Stack.Screen name="add-disambiguate" />
         <Stack.Screen name="library" />
+        <Stack.Screen name="card-detail" />
         <Stack.Screen name="review" options={{ gestureEnabled: false }} />
         <Stack.Screen name="review-complete" options={{ gestureEnabled: false }} />
       </Stack>
