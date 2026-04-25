@@ -8,6 +8,7 @@ interface SettingsState {
   showNativeByDefault: boolean;
   reminderEnabled: boolean;
   reminderTime: string;
+  dailyReviewLimit: number;
   currentStreak: number;
   lastReviewDate: string;
   hydrated: boolean;
@@ -26,7 +27,7 @@ function writeSetting(key: string, value: string) {
 }
 
 const BOOL_KEYS = new Set(["show_native_by_default", "reminder_enabled"]);
-const INT_KEYS = new Set(["current_streak"]);
+const INT_KEYS = new Set(["current_streak", "daily_review_limit"]);
 
 function parseSettingValue(key: string, value: string): string | boolean | number {
   if (key === "show_native_by_default") return value === "true";
@@ -42,6 +43,7 @@ const DB_TO_STATE: Record<string, string> = {
   reminder_enabled: "reminderEnabled",
   reminder_time: "reminderTime",
   current_streak: "currentStreak",
+  daily_review_limit: "dailyReviewLimit",
   last_review_date: "lastReviewDate",
 };
 
@@ -51,6 +53,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   showNativeByDefault: false,
   reminderEnabled: true,
   reminderTime: "20:00",
+  dailyReviewLimit: 0,
   currentStreak: 0,
   lastReviewDate: "",
   hydrated: false,
@@ -67,6 +70,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       showNativeByDefault: s["show_native_by_default"] === "true",
       reminderEnabled: s["reminder_enabled"] !== "false",
       reminderTime: s["reminder_time"] ?? "20:00",
+      dailyReviewLimit: parseInt(s["daily_review_limit"] ?? "0", 10),
       currentStreak: parseInt(s["current_streak"] ?? "0", 10),
       lastReviewDate: s["last_review_date"] ?? "",
       hydrated: true,
