@@ -6,15 +6,21 @@ export const en: Record<string, string> = {
 
   // Home screen
   home_greeting: "Hello!",
+  home_subtitle: "Today",
   cards_due_today: "Due today",
   total_cards: "Total words",
   day_streak: "Streak",
   day_streak_unit: "days",
+  days_in_a_row: "days in a row",
   start_review: "Start review",
   recently_added: "Recently added",
   no_cards_yet: "No cards yet",
   add_first_card: "Add your first word!",
   no_due_cards: "Nothing to review",
+  cards_lowercase: "cards",
+  tap_to_start: "tap to start",
+  view_all: "cards · view all →",
+  see_all: "See all",
 
   // Add screen
   add_word: "Add a word",
@@ -58,6 +64,9 @@ export const en: Record<string, string> = {
   total_cards_stat: "Total cards",
   mature_cards_stat: "Mature cards",
   longest_streak_stat: "Current streak",
+  daily_review_limit: "Cards to review per day",
+  daily_review_limit_desc: "Maximum number of cards per review session",
+  unlimited: "Unlimited",
   export_data: "Export data",
   export_data_desc: "Export your cards as JSON",
   export_success: "Data copied to clipboard",

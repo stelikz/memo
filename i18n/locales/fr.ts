@@ -6,15 +6,21 @@ export const fr: Record<string, string> = {
 
   // Home screen
   home_greeting: "Bonjour !",
+  home_subtitle: "Aujourd'hui",
   cards_due_today: "À réviser",
   total_cards: "Total mots",
   day_streak: "Série",
   day_streak_unit: "jours",
+  days_in_a_row: "jours consécutifs",
   start_review: "Commencer",
   recently_added: "Ajoutés récemment",
   no_cards_yet: "Aucune carte pour le moment",
   add_first_card: "Ajoutez votre premier mot !",
   no_due_cards: "Rien à réviser",
+  cards_lowercase: "cartes",
+  tap_to_start: "appuyez pour commencer",
+  view_all: "cartes · tout voir →",
+  see_all: "Tout voir",
 
   // Add screen
   add_word: "Ajouter un mot",
@@ -58,6 +64,9 @@ export const fr: Record<string, string> = {
   total_cards_stat: "Total des cartes",
   mature_cards_stat: "Cartes acquises",
   longest_streak_stat: "Série actuelle",
+  daily_review_limit: "Cartes à réviser par jour",
+  daily_review_limit_desc: "Nombre maximum de cartes par session de révision",
+  unlimited: "Illimité",
   export_data: "Exporter les données",
   export_data_desc: "Exporter vos cartes en JSON",
   export_success: "Données copiées dans le presse-papiers",
