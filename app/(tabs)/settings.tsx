@@ -139,16 +139,16 @@ export default function SettingsScreen() {
   // ── Handlers ────────────────────────────────────────────────────────────
 
   const handleReminderToggle = async (value: boolean) => {
+    setSetting("reminder_enabled", value ? "true" : "false");
     if (value) {
       const granted = await requestPermissions();
       if (!granted) {
+        setSetting("reminder_enabled", "false");
         Alert.alert("", t("notifications_denied"));
         return;
       }
-      setSetting("reminder_enabled", "true");
       await scheduleDailyReminder(reminderTime);
     } else {
-      setSetting("reminder_enabled", "false");
       await cancelDailyReminder();
     }
   };
@@ -327,6 +327,7 @@ export default function SettingsScreen() {
                 <DateTimePicker
                   value={timeStringToDate(reminderTime)}
                   mode="time"
+                  display="spinner"
                   is24Hour={false}
                   onChange={handleTimeChange}
                 />
