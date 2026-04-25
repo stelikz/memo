@@ -6,10 +6,8 @@ interface MeaningCardProps {
   definitionTarget: string;
   definitionNative: string;
   sentence?: string;
-  /** Visual variant: "existing" = muted card, "new" = highlighted with accent border */
   variant: "existing" | "new";
   translate: TranslateFn;
-  /** Optional label above the card (e.g. "Meaning 1", "New meaning") */
   label?: string;
 }
 
@@ -27,18 +25,18 @@ export function MeaningCard({
     <View
       className={`rounded-2xl p-4 ${
         isNew
-          ? "border-2 border-blue-400 bg-blue-50"
-          : "border border-gray-200 bg-white"
+          ? "border-2 border-memo-accent bg-memo-accent-soft"
+          : "border border-memo-line bg-memo-surface"
       }`}
     >
       {label && (
         <View className="mb-2 flex-row items-center gap-1.5">
           {isNew && (
-            <Ionicons name="sparkles" size={14} color="#2563eb" />
+            <Ionicons name="sparkles" size={14} color="#3B6FE5" />
           )}
           <Text
             className={`text-xs font-semibold uppercase tracking-wide ${
-              isNew ? "text-blue-600" : "text-gray-400"
+              isNew ? "text-memo-accent" : "text-memo-ink-muted"
             }`}
           >
             {label}
@@ -48,17 +46,17 @@ export function MeaningCard({
 
       <Text
         className={`text-base leading-6 ${
-          isNew ? "font-semibold text-gray-900" : "text-gray-900"
+          isNew ? "font-semibold text-memo-ink" : "text-memo-ink"
         }`}
       >
         {definitionTarget}
       </Text>
 
-      <Text className="mt-1 text-sm text-gray-500">{definitionNative}</Text>
+      <Text className="mt-1 text-sm text-memo-ink-soft">{definitionNative}</Text>
 
       {sentence ? (
-        <View className="mt-3 rounded-lg bg-gray-50 px-3 py-2">
-          <Text className="text-sm italic text-gray-600">{sentence}</Text>
+        <View className="mt-3 rounded-xl bg-memo-bg px-3 py-2">
+          <Text className="text-sm italic text-memo-ink-soft">{sentence}</Text>
         </View>
       ) : null}
     </View>

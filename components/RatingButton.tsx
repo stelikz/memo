@@ -10,32 +10,25 @@ interface RatingButtonProps extends Omit<PressableProps, "children"> {
   className?: string;
 }
 
-const containerStyles: Record<Rating, string> = {
-  again: "bg-red-100 border-red-200",
-  hard: "bg-orange-100 border-orange-200",
-  good: "bg-green-100 border-green-200",
-  easy: "bg-blue-100 border-blue-200",
+const labelColors: Record<Rating, string> = {
+  again: "#D85D5D",
+  hard: "#E0A33C",
+  good: "#3FA877",
+  easy: "#3B6FE5",
 };
 
-const pressedContainerStyles: Record<Rating, string> = {
-  again: "bg-red-200 border-red-300",
-  hard: "bg-orange-200 border-orange-300",
-  good: "bg-green-200 border-green-300",
-  easy: "bg-blue-200 border-blue-300",
+const borderColors: Record<Rating, string> = {
+  again: "border-memo-danger/25",
+  hard: "border-memo-warn/25",
+  good: "border-memo-success/25",
+  easy: "border-memo-accent/25",
 };
 
 const labelStyles: Record<Rating, string> = {
-  again: "text-red-700",
-  hard: "text-orange-700",
-  good: "text-green-700",
-  easy: "text-blue-700",
-};
-
-const subtitleStyles: Record<Rating, string> = {
-  again: "text-red-400",
-  hard: "text-orange-400",
-  good: "text-green-400",
-  easy: "text-blue-400",
+  again: "text-memo-danger",
+  hard: "text-memo-warn",
+  good: "text-memo-success",
+  easy: "text-memo-accent",
 };
 
 export function RatingButton({
@@ -50,17 +43,14 @@ export function RatingButton({
 }: RatingButtonProps) {
   const [pressed, setPressed] = useState(false);
 
-  const base = "flex-1 items-center rounded-xl border px-2 py-3";
-  const bg = disabled
-    ? "bg-gray-100 border-gray-200"
-    : pressed
-      ? pressedContainerStyles[rating]
-      : containerStyles[rating];
+  const base = "flex-1 items-center rounded-[14px] border px-2 py-3 bg-memo-surface";
+  const border = disabled ? "border-memo-line" : borderColors[rating];
 
   return (
     <Pressable
-      className={`${base} ${bg} ${className ?? ""}`}
+      className={`${base} ${border} ${className ?? ""}`}
       disabled={disabled}
+      style={pressed ? { transform: [{ scale: 0.97 }] } : undefined}
       onPressIn={(e) => {
         setPressed(true);
         onPressIn?.(e);
@@ -72,14 +62,12 @@ export function RatingButton({
       {...rest}
     >
       <Text
-        className={`text-sm font-semibold ${disabled ? "text-gray-400" : labelStyles[rating]}`}
+        className={`text-sm font-semibold ${disabled ? "text-memo-ink-muted" : labelStyles[rating]}`}
       >
         {label}
       </Text>
       {subtitle && (
-        <Text
-          className={`mt-0.5 text-xs ${disabled ? "text-gray-300" : subtitleStyles[rating]}`}
-        >
+        <Text className="mt-0.5 text-[11px] text-memo-ink-muted font-mono">
           {subtitle}
         </Text>
       )}

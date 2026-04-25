@@ -1,7 +1,6 @@
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
-import { Button } from "./Button";
 import { type AICardResponse } from "../lib/ai";
 import { type TranslateFn } from "../i18n";
 import { RevealableText } from "./RevealableText";
@@ -27,23 +26,29 @@ export function CardPreview({
   return (
     <View className="w-full">
       {/* Lemma + pronunciation + TTS */}
-      <View className="flex-row items-center gap-3">
-        <Text className="text-2xl font-bold text-gray-900">{card.lemma}</Text>
-        <Text className="text-sm text-gray-400">{card.pronunciation_ipa}</Text>
-        <Button variant="ghost" className="bg-transparent py-0" onPress={speak} hitSlop={8}>
-          <Ionicons name="volume-medium-outline" size={22} color="#2563eb" />
-        </Button>
+      <View className="flex-row items-center gap-3 flex-wrap">
+        <Text className="text-[36px] font-light text-memo-ink">{card.lemma}</Text>
+        <Text className="text-[13px] text-memo-ink-muted font-mono tracking-wider">
+          {card.pronunciation_ipa}
+        </Text>
+        <Pressable
+          className="ml-auto h-8 w-8 items-center justify-center rounded-full bg-memo-surface-alt"
+          onPress={speak}
+          hitSlop={8}
+        >
+          <Ionicons name="volume-medium-outline" size={16} color="#454A55" />
+        </Pressable>
       </View>
 
-      {/* Part of speech + encountered form */}
-      <Text className="mt-1 text-sm text-gray-500">
+      {/* Part of speech */}
+      <Text className="mt-1 text-[12px] font-medium uppercase tracking-widest text-memo-ink-muted">
         {card.part_of_speech}
         {card.encountered_form !== card.lemma &&
-          ` \u00B7 ${card.encountered_form}`}
+          ` · ${card.encountered_form}`}
       </Text>
 
       {/* Target-language definition */}
-      <Text className="mt-4 text-base leading-6 text-gray-900">
+      <Text className="mt-5 text-[22px] font-light leading-7 text-memo-ink">
         {card.primary_definition_target}
       </Text>
 
@@ -54,43 +59,43 @@ export function CardPreview({
         content={card.primary_definition_native}
       />
 
-      {/* Synonyms */}
-      {card.synonyms.length > 0 && (
-        <View className="mt-4">
-          <Text className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
-            {t("synonyms")}
+      {/* Example sentence */}
+      {card.example_sentence && (
+        <View className="mt-5 rounded-[14px] bg-memo-bg px-[18px] py-4">
+          <Text className="text-[17px] italic leading-6 text-memo-ink-soft">
+            {card.example_sentence}
           </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {card.synonyms.map((s) => (
-              <View key={s.word} className="rounded-full bg-blue-50 px-3 py-1">
-                <Text className="text-sm text-blue-700">
-                  {s.word}
-                  {s.register ? ` (${s.register})` : ""}
-                </Text>
-              </View>
-            ))}
-          </View>
         </View>
       )}
 
-      {/* Antonym */}
-      {card.antonym && (
-        <View className="mt-3">
-          <Text className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
-            {t("antonym")}
-          </Text>
-          <View className="self-start rounded-full bg-red-50 px-3 py-1">
-            <Text className="text-sm text-red-700">{card.antonym.word}</Text>
+      {/* Synonyms + Antonym */}
+      <View className="mt-[18px] flex-row flex-wrap gap-2.5">
+        {card.synonyms.slice(0, 2).map((s) => (
+          <View
+            key={s.word}
+            className="rounded-lg bg-memo-success-soft px-3 py-1.5"
+          >
+            <Text className="text-[12px] font-medium text-memo-success">
+              ≈ {s.word}
+            </Text>
           </View>
-        </View>
-      )}
+        ))}
+        {card.antonym && (
+          <View className="rounded-lg bg-memo-accent-soft px-3 py-1.5">
+            <Text className="text-[12px] font-medium text-memo-accent">
+              ≠ {card.antonym.word}
+            </Text>
+          </View>
+        )}
+      </View>
 
       {/* Polysemy info */}
       {card.total_common_meanings > 1 && (
-        <View className="mt-4 rounded-xl bg-amber-50 px-4 py-3">
-          <Text className="text-sm text-amber-800">
-            {t("also_means")} — {card.total_common_meanings}{" "}
-            {t("other_meanings_count")}
+        <View className="mt-4 flex-row items-center gap-2 border-t border-memo-line pt-4">
+          <Ionicons name="information-circle-outline" size={16} color="#3B6FE5" />
+          <Text className="text-[13px] font-medium text-memo-accent">
+            {card.total_common_meanings - 1} other meaning
+            {card.total_common_meanings > 2 ? "s" : ""} · tap to expand
           </Text>
         </View>
       )}

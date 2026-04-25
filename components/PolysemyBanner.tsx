@@ -18,22 +18,24 @@ export function PolysemyBanner({
   const ordinal = existingCount + 1;
 
   return (
-    <View className="flex-row items-start gap-3 rounded-2xl bg-amber-50 px-4 py-4">
+    <View className="flex-row items-start gap-3 rounded-2xl bg-memo-accent-soft px-4 py-4">
       <Ionicons
         name="information-circle"
         size={22}
-        color="#d97706"
+        color="#3B6FE5"
         style={{ marginTop: 1 }}
       />
       <View className="flex-1">
-        <Text className="text-sm font-semibold text-amber-900">
+        <Text className="text-sm font-semibold text-memo-ink">
           {t("polysemy_nth_meaning")
             .replace("{{n}}", String(ordinal))
             .replace("{{word}}", lemma)}
         </Text>
-        <Text className="mt-1 text-sm text-amber-700">
-          {t("polysemy_total_meanings")
-            .replace("{{count}}", String(totalCommonMeanings))}
+        <Text className="mt-1 text-sm text-memo-ink-soft">
+          {t("polysemy_total_meanings").replace(
+            "{{count}}",
+            String(totalCommonMeanings),
+          )}
         </Text>
       </View>
     </View>

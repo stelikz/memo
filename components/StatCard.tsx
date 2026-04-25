@@ -14,18 +14,20 @@ export function StatCard({
   label,
   value,
   icon,
-  iconColor = "#2563eb",
+  iconColor = "#3B6FE5",
   onPress,
 }: StatCardProps) {
   const content = (
     <View className="w-full items-start">
-      <Text className="text-xs uppercase tracking-wide text-gray-500">
-        {label}
-      </Text>
-      <View className="mt-1 flex-row items-center gap-1">
-        <Text className="text-2xl font-bold text-gray-900">{value}</Text>
-        <Ionicons name={icon} size={20} color={iconColor} />
+      <View className="flex-row items-center gap-1.5">
+        <Ionicons name={icon} size={14} color={iconColor} />
+        <Text className="text-[11px] font-medium uppercase tracking-widest text-memo-ink-muted">
+          {label}
+        </Text>
       </View>
+      <Text className="mt-2 text-[48px] font-light leading-none text-memo-ink">
+        {value}
+      </Text>
     </View>
   );
 
@@ -33,7 +35,7 @@ export function StatCard({
     return (
       <Button
         variant="ghost"
-        className="flex-1 items-start rounded-2xl bg-white p-4 shadow-sm"
+        className="flex-1 items-start rounded-[22px] border border-memo-line bg-memo-surface p-5"
         onPress={onPress}
       >
         {content}
@@ -42,6 +44,8 @@ export function StatCard({
   }
 
   return (
-    <View className="flex-1 rounded-2xl bg-white p-4 shadow-sm">{content}</View>
+    <View className="flex-1 rounded-[22px] border border-memo-line bg-memo-surface p-5">
+      {content}
+    </View>
   );
 }

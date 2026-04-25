@@ -12,38 +12,38 @@ type ButtonProps = PressableProps & {
 );
 
 const containerStyles: Record<ButtonVariant, string> = {
-  primary: "bg-blue-600",
-  secondary: "border border-gray-300 bg-white",
-  danger: "bg-red-600",
-  ghost: "bg-gray-100",
+  primary: "bg-memo-accent",
+  secondary: "border border-memo-line-strong bg-memo-surface",
+  danger: "border border-memo-danger bg-transparent",
+  ghost: "bg-memo-surface-alt",
 };
 
 const disabledContainerStyles: Record<ButtonVariant, string> = {
-  primary: "bg-gray-300",
-  secondary: "border border-gray-200 bg-gray-50",
-  danger: "bg-gray-300",
-  ghost: "bg-gray-100",
+  primary: "bg-memo-surface-alt",
+  secondary: "border border-memo-line bg-memo-surface-alt",
+  danger: "bg-memo-surface-alt",
+  ghost: "bg-memo-surface-alt",
 };
 
 const pressedContainerStyles: Record<ButtonVariant, string> = {
-  primary: "bg-blue-700",
-  secondary: "border border-gray-300 bg-gray-50",
-  danger: "bg-red-700",
-  ghost: "bg-gray-200",
+  primary: "bg-memo-accent opacity-90",
+  secondary: "border border-memo-line-strong bg-memo-surface-alt",
+  danger: "border border-memo-danger bg-memo-danger-soft",
+  ghost: "bg-memo-line",
 };
 
 const textStyles: Record<ButtonVariant, string> = {
   primary: "text-white",
-  secondary: "text-gray-700",
-  danger: "text-white",
-  ghost: "text-gray-700",
+  secondary: "text-memo-ink",
+  danger: "text-memo-danger",
+  ghost: "text-memo-ink-soft",
 };
 
 const disabledTextStyles: Record<ButtonVariant, string> = {
-  primary: "text-gray-500",
-  secondary: "text-gray-400",
-  danger: "text-gray-500",
-  ghost: "text-gray-400",
+  primary: "text-memo-ink-muted",
+  secondary: "text-memo-ink-muted",
+  danger: "text-memo-ink-muted",
+  ghost: "text-memo-ink-muted",
 };
 
 export function Button({
