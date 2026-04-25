@@ -11,16 +11,16 @@ export default function RootLayout() {
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <Text className="text-red-500">Migration error: {error.message}</Text>
+      <View className="flex-1 items-center justify-center bg-memo-bg">
+        <Text className="text-memo-danger">Migration error: {error.message}</Text>
       </View>
     );
   }
 
   if (!success) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <Text className="text-gray-500">Loading...</Text>
+      <View className="flex-1 items-center justify-center bg-memo-bg">
+        <Text className="text-memo-ink-muted">Loading...</Text>
       </View>
     );
   }

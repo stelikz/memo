@@ -10,10 +10,10 @@ import { useReviewStore } from "../stores/review";
 import { Button } from "../components/Button";
 
 const BREAKDOWN = [
-  { key: "againCount" as const, label: "rating_again", color: "bg-red-400" },
-  { key: "hardCount" as const, label: "rating_hard", color: "bg-orange-400" },
-  { key: "goodCount" as const, label: "rating_good", color: "bg-green-400" },
-  { key: "easyCount" as const, label: "rating_easy", color: "bg-blue-400" },
+  { key: "againCount" as const, label: "rating_again", color: "bg-memo-danger" },
+  { key: "hardCount" as const, label: "rating_hard", color: "bg-memo-warn" },
+  { key: "goodCount" as const, label: "rating_good", color: "bg-memo-success" },
+  { key: "easyCount" as const, label: "rating_easy", color: "bg-memo-accent" },
 ] as const;
 
 export default function ReviewCompleteScreen() {
@@ -46,40 +46,51 @@ export default function ReviewCompleteScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-memo-bg" edges={["top"]}>
       <View className="flex-1 items-center justify-center px-8">
         {/* Success icon */}
-        <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-green-100">
-          <Ionicons name="checkmark-circle" size={48} color="#22c55e" />
+        <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-memo-success-soft">
+          <Ionicons name="checkmark" size={48} color="#3FA877" />
         </View>
 
-        <Text className="text-2xl font-bold text-gray-900">
+        <Text className="text-[28px] font-light text-memo-ink">
           {t("well_done")}
         </Text>
-        <Text className="mt-1 text-base text-gray-500">
+        <Text className="mt-1 text-base text-memo-ink-soft">
           {t("review_complete")}
         </Text>
 
         {/* Stats */}
-        <View className="mt-8 w-full rounded-2xl bg-white p-5 shadow-sm">
-          <Text className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
+        <View
+          className="mt-8 w-full rounded-3xl border border-memo-line bg-memo-surface p-5"
+          style={{
+            shadowColor: "#1F1B14",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.04,
+            shadowRadius: 3,
+            elevation: 2,
+          }}
+        >
+          <Text className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-memo-ink-muted">
             {t("review_stats")}
           </Text>
 
           <View className="mb-4 flex-row justify-around">
             <View className="items-center">
-              <Text className="text-2xl font-bold text-gray-900">
+              <Text className="text-[32px] font-light text-memo-ink">
                 {totalReviewed}
               </Text>
-              <Text className="text-sm text-gray-500">
+              <Text className="text-[13px] text-memo-ink-soft">
                 {t("cards_reviewed")}
               </Text>
             </View>
             <View className="items-center">
-              <Text className="text-2xl font-bold text-gray-900">
+              <Text className="text-[32px] font-light text-memo-ink">
                 {currentStreak}
               </Text>
-              <Text className="text-sm text-gray-500">{t("day_streak")}</Text>
+              <Text className="text-[13px] text-memo-ink-soft">
+                {t("day_streak")}
+              </Text>
             </View>
           </View>
 
@@ -103,15 +114,13 @@ export default function ReviewCompleteScreen() {
 
               {/* Legend */}
               <View className="mt-3 flex-row flex-wrap gap-x-4 gap-y-1">
-                {BREAKDOWN.map(({ key, label }, i) => {
+                {BREAKDOWN.map(({ key, label, color }, i) => {
                   const count = counts[i];
                   if (count === 0) return null;
                   return (
                     <View key={key} className="flex-row items-center gap-1.5">
-                      <View
-                        className={`h-2.5 w-2.5 rounded-full ${BREAKDOWN[i].color}`}
-                      />
-                      <Text className="text-xs text-gray-600">
+                      <View className={`h-2.5 w-2.5 rounded-full ${color}`} />
+                      <Text className="text-xs text-memo-ink-soft">
                         {t(label)} ({count})
                       </Text>
                     </View>
@@ -124,12 +133,11 @@ export default function ReviewCompleteScreen() {
       </View>
 
       {/* Actions */}
-      <View className="px-5 pb-6">
+      <View className="px-6 pb-6 gap-3">
         <Button label={t("go_home")} onPress={handleGoHome} />
         <Button
           variant="secondary"
           label={t("add_another")}
-          className="mt-3"
           onPress={handleAddWord}
         />
       </View>

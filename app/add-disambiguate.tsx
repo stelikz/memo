@@ -1,4 +1,4 @@
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -42,37 +42,40 @@ export default function AddDisambiguateScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-memo-bg" edges={["top"]}>
+      {/* Close button */}
+      <View className="flex-row justify-end px-[18px] pt-2">
+        <Pressable
+          className="h-9 w-9 items-center justify-center rounded-full border border-memo-line bg-memo-surface"
+          onPress={() => {
+            reset();
+            router.back();
+          }}
+        >
+          <Ionicons name="close" size={18} color="#15181F" />
+        </Pressable>
+      </View>
+
       <ScrollView
-        contentContainerClassName="px-5 pb-8 pt-6"
+        contentContainerClassName="px-6 pb-8 pt-3"
         keyboardShouldPersistTaps="handled"
       >
-        <View className="mb-5 flex-row items-center gap-3">
-          <Button
-            variant="ghost"
-            className="bg-transparent py-0"
-            onPress={() => {
-              reset();
-              router.back();
-            }}
-          >
-            <Ionicons name="arrow-back" size={24} color="#111827" />
-          </Button>
-          <Text className="flex-1 text-xl font-bold text-gray-900">
-            {t("new_meaning_detected")}
-          </Text>
+        {/* Icon + title */}
+        <View className="mb-4 h-11 w-11 items-center justify-center rounded-full bg-memo-accent-soft">
+          <Ionicons name="information-circle" size={22} color="#3B6FE5" />
         </View>
-
-        <PolysemyBanner
-          lemma={aiResult.lemma}
-          existingCount={existingCards.length}
-          totalCommonMeanings={aiResult.total_common_meanings}
-          translate={t}
-        />
+        <Text className="text-[30px] font-light leading-tight text-memo-ink">
+          {t("new_meaning_detected")}
+        </Text>
+        <Text className="mt-2.5 mb-5 text-sm leading-relaxed text-memo-ink-soft">
+          {t("polysemy_nth_meaning")
+            .replace("{{n}}", String(existingCards.length + 1))
+            .replace("{{word}}", aiResult.lemma)}
+        </Text>
 
         {existingCards.length > 0 && (
-          <View className="mt-6">
-            <Text className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          <View className="mb-5">
+            <Text className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-memo-ink-muted">
               {t("existing_meanings")}
             </Text>
             <View className="gap-3">
@@ -98,8 +101,8 @@ export default function AddDisambiguateScreen() {
           </View>
         )}
 
-        <View className="mt-6">
-          <Text className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+        <View className="mb-6">
+          <Text className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-memo-ink-muted">
             {t("new_meaning_detected")}
           </Text>
           <MeaningCard
@@ -111,7 +114,7 @@ export default function AddDisambiguateScreen() {
           />
         </View>
 
-        <View className="mt-8 gap-3">
+        <View className="gap-2.5">
           <Button label={t("add_as_new_card")} onPress={handleAddAsNewCard} />
           <Button
             label={t("same_meaning_add_sentence")}

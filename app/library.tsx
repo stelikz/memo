@@ -1,11 +1,11 @@
-import { memo, useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
+  Pressable,
   Text,
   TextInput,
   View,
-  type LayoutChangeEvent,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,6 +23,7 @@ import {
 import { CardState } from "../db/types";
 import { Button } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
+import { DropdownMenu } from "../components/DropdownMenu";
 
 // ── Filter & Sort config ────────────────────────────────────────────────────
 
@@ -42,42 +43,32 @@ const SORTS: { key: LibrarySort; labelKey: string }[] = [
 
 // ── FSRS state helpers ──────────────────────────────────────────────────────
 
-function getStateBadge(
-  state: number,
-  t: (key: string) => string,
-): { label: string; color: string; bg: string } {
+function getMemorizationChip(state: number): {
+  label: string;
+  bg: string;
+  fg: string;
+} {
   switch (state) {
-    case CardState.New:
-      return {
-        label: t("state_new"),
-        color: "text-blue-700",
-        bg: "bg-blue-100",
-      };
+    case CardState.Review:
+      return { label: "Mastered", bg: "bg-memo-success-soft", fg: "text-memo-success" };
     case CardState.Learning:
     case CardState.Relearning:
-      return {
-        label: t("state_learning"),
-        color: "text-amber-700",
-        bg: "bg-amber-100",
-      };
-    case CardState.Review:
-      return {
-        label: t("state_mature"),
-        color: "text-green-700",
-        bg: "bg-green-100",
-      };
+      return { label: "Learning", bg: "bg-memo-accent-soft", fg: "text-memo-accent" };
+    case CardState.New:
     default:
-      return {
-        label: t("state_new"),
-        color: "text-blue-700",
-        bg: "bg-blue-100",
-      };
+      return { label: "New", bg: "bg-memo-surface-alt", fg: "text-memo-ink-soft" };
   }
 }
 
-// ── Row component (memoized to avoid full-list re-renders on selection) ────
+// ── Row component (memoized) ────────────────────────────────────────────────
 
 type CardRow = ReturnType<typeof getLibraryCards>[number];
+
+interface OtherMeaning {
+  definition_target: string;
+  definition_native: string;
+  example_sentence: string;
+}
 
 interface LibraryRowProps {
   item: CardRow;
@@ -88,7 +79,7 @@ interface LibraryRowProps {
   onLongPress: (id: string) => void;
 }
 
-const LibraryRow = memo(function LibraryRow({
+function LibraryRow({
   item,
   selectMode,
   isSelected,
@@ -96,64 +87,149 @@ const LibraryRow = memo(function LibraryRow({
   onPress,
   onLongPress,
 }: LibraryRowProps) {
-  const badge = getStateBadge(item.state, t);
+  const chip = getMemorizationChip(item.state);
+  const multi = item.totalCommonMeanings > 1;
+  const [expanded, setExpanded] = useState(false);
+
+  let otherMeanings: OtherMeaning[] = [];
+  if (multi) {
+    try {
+      otherMeanings = JSON.parse(item.otherMeaningsJson);
+    } catch {}
+  }
+
+  const handlePress = () => {
+    if (selectMode) {
+      onPress(item.id);
+    } else if (multi && otherMeanings.length > 0) {
+      setExpanded((prev) => !prev);
+    } else {
+      onPress(item.id);
+    }
+  };
 
   return (
-    <Button
-      variant="ghost"
-      className="flex-row items-center bg-white px-4 py-3"
-      onPress={() => onPress(item.id)}
-      onLongPress={() => onLongPress(item.id)}
-    >
-      {selectMode && (
-        <View className="mr-3">
-          <Ionicons
-            name={isSelected ? "checkbox" : "square-outline"}
-            size={22}
-            color={isSelected ? "#2563eb" : "#9ca3af"}
-          />
-        </View>
-      )}
+    <View>
+      <Pressable
+        className={`flex-row items-center bg-memo-surface px-4 py-3.5 ${
+          expanded
+            ? "rounded-t-2xl border border-b-0 border-memo-accent"
+            : `rounded-2xl border ${isSelected ? "border-memo-accent" : "border-memo-line"}`
+        }`}
+        onPress={handlePress}
+        onLongPress={() => onLongPress(item.id)}
+      >
+        {selectMode && (
+          <Pressable className="mr-3" onPress={() => onPress(item.id)}>
+            <View
+              className={`h-[22px] w-[22px] items-center justify-center rounded-full border-[1.5px] ${
+                isSelected
+                  ? "border-memo-accent bg-memo-accent"
+                  : "border-memo-line-strong bg-transparent"
+              }`}
+            >
+              {isSelected && (
+                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+              )}
+            </View>
+          </Pressable>
+        )}
 
-      <View className="flex-1">
-        <View className="flex-row items-center gap-2">
-          <Text className="text-base font-semibold text-gray-900">
-            {item.lemma}
-          </Text>
-          <Text className="text-xs text-gray-400">{item.partOfSpeech}</Text>
-          {item.totalCommonMeanings > 1 && (
-            <View className="rounded bg-amber-100 px-1.5 py-0.5">
-              <Text className="text-[10px] font-medium text-amber-700">
+        <View className="flex-1">
+          <View className="flex-row items-baseline gap-2">
+            <Text className="text-lg font-normal text-memo-ink">
+              {item.lemma}
+            </Text>
+            <Text className="text-[11px] uppercase tracking-wider text-memo-ink-muted">
+              {item.partOfSpeech}
+            </Text>
+            {item.isSuspended === 1 && (
+              <View className="rounded bg-memo-warn-soft px-1.5 py-0.5">
+                <Text className="text-[10px] font-medium text-memo-warn">
+                  PAUSED
+                </Text>
+              </View>
+            )}
+          </View>
+          {multi ? (
+            <View className="mt-0.5 flex-row items-center gap-1">
+              <Text className="text-[13px] font-medium text-memo-accent">
                 {item.totalCommonMeanings} {t("meanings_short")}
               </Text>
+              <Ionicons
+                name={expanded ? "chevron-up" : "chevron-down"}
+                size={12}
+                color="#3B6FE5"
+              />
             </View>
+          ) : (
+            <Text
+              className="mt-0.5 text-[13px] text-memo-ink-soft"
+              numberOfLines={1}
+            >
+              {item.primaryDefinitionTarget}
+            </Text>
           )}
         </View>
-        <Text className="mt-0.5 text-sm text-gray-500" numberOfLines={1}>
-          {item.primaryDefinitionTarget}
-        </Text>
-      </View>
 
-      <View className="items-end gap-1">
-        <View className={`rounded-full px-2 py-0.5 ${badge.bg}`}>
-          <Text className={`text-[10px] font-semibold ${badge.color}`}>
-            {badge.label}
-          </Text>
-        </View>
-        {item.isSuspended === 1 && (
-          <View className="rounded-full bg-gray-200 px-2 py-0.5">
-            <Text className="text-[10px] font-semibold text-gray-500">
-              {t("suspended")}
+        <View className="items-end gap-1">
+          <View className={`rounded-full px-2.5 py-1 ${chip.bg}`}>
+            <Text
+              className={`text-[11px] font-semibold uppercase tracking-wider ${chip.fg}`}
+            >
+              {chip.label}
             </Text>
           </View>
+        </View>
+
+        {!selectMode && !multi && (
+          <Ionicons
+            name="chevron-forward"
+            size={16}
+            color="#8A8F9A"
+            style={{ marginLeft: 8 }}
+          />
         )}
-      </View>
-    </Button>
+      </Pressable>
+
+      {/* Expanded meanings */}
+      {expanded && otherMeanings.length > 0 && (
+        <View className="overflow-hidden rounded-b-2xl border border-t-0 border-memo-accent bg-memo-surface">
+          {otherMeanings.map((m, i) => (
+            <Pressable
+              key={i}
+              className="flex-row items-center gap-3 px-4 py-3"
+              style={
+                i > 0
+                  ? { borderTopWidth: 0.5, borderTopColor: "rgba(21,24,31,0.08)" }
+                  : undefined
+              }
+              onPress={() => onPress(item.id)}
+            >
+              <View className="h-[22px] w-[22px] items-center justify-center rounded-full bg-memo-accent-soft">
+                <Text className="text-[11px] font-semibold text-memo-accent">
+                  {i + 1}
+                </Text>
+              </View>
+              <View className="flex-1">
+                <Text
+                  className="text-[14px] leading-snug text-memo-ink"
+                  numberOfLines={2}
+                >
+                  {m.definition_target}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={14} color="#8A8F9A" />
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
   );
-});
+}
 
 function ItemSeparator() {
-  return <View className="h-px bg-gray-100" />;
+  return <View className="h-2.5" />;
 }
 
 // ── Screen ──────────────────────────────────────────────────────────────────
@@ -166,8 +242,6 @@ export default function LibraryScreen() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<LibraryFilter>("all");
   const [sort, setSort] = useState<LibrarySort>("newest");
-  const [showSortMenu, setShowSortMenu] = useState(false);
-  const [sortButtonY, setSortButtonY] = useState(0);
 
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -274,7 +348,7 @@ export default function LibraryScreen() {
     );
   }
 
-  // ── Row handlers (stable refs for memoized row) ─────────────────────────
+  // ── Row handlers ─────────────────────────────────────────────────────────
 
   const handleRowPress = useCallback(
     (id: string) => {
@@ -311,44 +385,33 @@ export default function LibraryScreen() {
     [selectMode, selectedIds, t, handleRowPress, handleRowLongPress],
   );
 
-  const handleSortButtonLayout = useCallback((e: LayoutChangeEvent) => {
-    setSortButtonY(e.nativeEvent.layout.y + e.nativeEvent.layout.height);
-  }, []);
-
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={["top"]}>
-      <View className="flex-row items-center justify-between px-5 pb-2 pt-3">
-        <View className="flex-row items-center b">
-          <Button
-            variant="ghost"
-            className="mr-3 items-center justify-center bg-transparent"
-            onPress={() => router.back()}
-          >
-            <Ionicons name="chevron-back" size={22} color="#6b7280" />
-          </Button>
-          <Text className="text-lg font-medium text-gray-900">
-            {t("my_words")}
-          </Text>
-          <Text className="ml-2 text-sm text-gray-400">{filteredCount}</Text>
-        </View>
-
-        <Button
-          variant="ghost"
-          className="rounded-lg px-3 py-1.5"
-          onPress={selectMode ? exitSelectMode : enterSelectMode}
+    <SafeAreaView className="flex-1 bg-memo-bg" edges={["top"]}>
+      {/* Header */}
+      <View className="flex-row items-center gap-3 px-[18px] pb-3 pt-1">
+        <Pressable
+          className="h-9 w-9 items-center justify-center rounded-full border border-memo-line bg-memo-surface"
+          onPress={() => router.back()}
         >
-          <Text className="text-sm font-semibold text-blue-600">
+          <Ionicons name="chevron-back" size={18} color="#15181F" />
+        </Pressable>
+        <Text className="flex-1 text-[26px] font-light text-memo-ink">
+          {t("my_words")}
+        </Text>
+        <Pressable onPress={selectMode ? exitSelectMode : enterSelectMode}>
+          <Text className="text-sm font-medium text-memo-accent">
             {t(selectMode ? "cancel" : "select")}
           </Text>
-        </Button>
+        </Pressable>
       </View>
 
-      <View className="mx-5 mb-3 flex-row items-center rounded-xl bg-white px-3 py-2">
-        <Ionicons name="search-outline" size={18} color="#9ca3af" />
+      {/* Search */}
+      <View className="mx-[18px] mb-3.5 flex-row items-center gap-2.5 rounded-[14px] border border-memo-line bg-memo-surface px-3.5 py-2.5">
+        <Ionicons name="search-outline" size={18} color="#8A8F9A" />
         <TextInput
-          className="ml-2 flex-1 text-base text-gray-900"
+          className="flex-1 text-[15px] text-memo-ink"
           placeholder={t("search_words")}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor="#8A8F9A"
           value={search}
           onChangeText={setSearch}
           autoCorrect={false}
@@ -357,101 +420,61 @@ export default function LibraryScreen() {
         />
       </View>
 
-      <View className="mb-2 flex-row gap-2 px-5">
-        {FILTERS.map((f) => (
-          <Button
-            key={f.key}
-            variant={filter === f.key ? "primary" : "secondary"}
-            className="rounded-full px-3 py-1.5"
-            onPress={() => setFilter(f.key)}
-          >
-            <Text
-              className={`text-xs font-semibold ${
-                filter === f.key ? "text-white" : "text-gray-600"
+      {/* Filters + sort */}
+      <View className="mb-3.5 flex-row items-center gap-2 px-[18px]">
+        <View className="flex-1 flex-row gap-1.5">
+          {FILTERS.map((f) => (
+            <Pressable
+              key={f.key}
+              className={`rounded-full px-3.5 py-2 ${
+                filter === f.key ? "bg-memo-accent" : "bg-memo-surface-alt"
               }`}
-            >
-              {t(f.labelKey)}
-            </Text>
-          </Button>
-        ))}
-      </View>
-
-      <View
-        className="mb-2 flex-row items-center justify-between bg-white px-5"
-        onLayout={handleSortButtonLayout}
-      >
-        {selectMode ? (
-          <Button
-            variant="ghost"
-            className="flex-row items-center gap-1 rounded-lg px-2 py-1 bg-white"
-            onPress={toggleSelectAll}
-          >
-            <Ionicons
-              name={allSelected ? "checkbox" : "square-outline"}
-              size={18}
-              color={allSelected ? "#2563eb" : "#9ca3af"}
-            />
-            <Text className="text-sm text-gray-600">{t("select_all")}</Text>
-          </Button>
-        ) : null}
-
-        <Button
-          variant="ghost"
-          className="flex-row items-center gap-1 rounded-lg px-2 py-1 bg-white"
-          onPress={() => setShowSortMenu(!showSortMenu)}
-        >
-          <Text className="text-xs text-gray-400">
-            {t("sorted_by")}{" "}
-            <Text className="text-xs text-blue-500">
-              {t(SORTS.find((s) => s.key === sort)!.labelKey)}
-            </Text>
-          </Text>
-        </Button>
-      </View>
-
-      {showSortMenu && (
-        <View
-          className="absolute left-5 z-50 rounded-xl bg-white py-1 shadow-lg"
-          style={{ top: sortButtonY }}
-        >
-          {SORTS.map((s) => (
-            <Button
-              key={s.key}
-              variant="ghost"
-              className={`px-4 bg-white${sort === s.key ? "bg-blue-50" : ""}`}
-              onPress={() => {
-                setSort(s.key);
-                setShowSortMenu(false);
-              }}
+              onPress={() => setFilter(f.key)}
             >
               <Text
-                className={`text-sm ${
-                  sort === s.key
-                    ? "font-semibold text-blue-600"
-                    : "text-gray-700"
+                className={`text-[13px] font-medium ${
+                  filter === f.key ? "text-white" : "text-memo-ink-soft"
                 }`}
               >
-                {t(s.labelKey)}
+                {t(f.labelKey)}
               </Text>
-            </Button>
+            </Pressable>
           ))}
         </View>
-      )}
+        <DropdownMenu
+          options={SORTS.map((s) => ({ value: s.key, label: t(s.labelKey) }))}
+          selected={sort}
+          onSelect={(value) => setSort(value as LibrarySort)}
+          align="right"
+        >
+          <View className="h-[34px] w-9 items-center justify-center rounded-full border border-memo-line bg-memo-surface">
+            <Ionicons name="swap-vertical-outline" size={16} color="#15181F" />
+          </View>
+        </DropdownMenu>
+      </View>
 
-      {selectMode && selectedCount > 0 && (
-        <View className="mx-5 mb-2">
-          <Text className="text-sm font-medium text-blue-600">
+      {/* Select-all bar */}
+      {selectMode && (
+        <Pressable
+          className="mx-[18px] mb-3 flex-row items-center justify-between rounded-xl bg-memo-accent px-3.5 py-2.5"
+          onPress={toggleSelectAll}
+        >
+          <Text className="text-[13px] font-medium text-white">
+            {allSelected ? t("select_all") : t("select_all")}
+          </Text>
+          <Text className="text-[13px] text-white/70">
             {t("selected_count").replace("{{count}}", String(selectedCount))}
           </Text>
-        </View>
+        </Pressable>
       )}
 
+      {/* Word list */}
       <FlatList
         data={allCards}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ItemSeparatorComponent={ItemSeparator}
-        contentContainerClassName="pb-24"
+        contentContainerClassName="px-[18px] pb-24"
         ListEmptyComponent={
           <EmptyState
             icon="search-outline"
@@ -461,40 +484,45 @@ export default function LibraryScreen() {
         }
       />
 
+      {/* Bulk action bar */}
       {selectMode && selectedCount > 0 && (
-        <View className="absolute bottom-0 left-0 right-0 border-t border-gray-200 bg-white px-5 pb-8 pt-3">
-          <View className="flex-row gap-3">
-            <Button
-              variant="secondary"
-              className="flex-1 flex-row items-center justify-center gap-2 py-3"
-              onPress={handleResetProgress}
-            >
-              <Ionicons name="refresh-outline" size={18} color="#374151" />
-              <Text className="text-sm font-semibold text-gray-700">
-                {t("reset_progress_action")}
-              </Text>
-            </Button>
-            <Button
-              variant="secondary"
-              className="flex-1 flex-row items-center justify-center gap-2 py-3"
-              onPress={handleSuspend}
-            >
-              <Ionicons name="pause-outline" size={18} color="#374151" />
-              <Text className="text-sm font-semibold text-gray-700">
-                {t("suspend_action")}
-              </Text>
-            </Button>
-            <Button
-              variant="danger"
-              className="flex-1 flex-row items-center justify-center gap-2 py-3"
-              onPress={handleDelete}
-            >
-              <Ionicons name="trash-outline" size={18} color="#ffffff" />
-              <Text className="text-sm font-semibold text-white">
-                {t("delete_action")}
-              </Text>
-            </Button>
-          </View>
+        <View
+          className="absolute bottom-24 left-[18px] right-[18px] flex-row gap-1.5 rounded-[18px] border border-memo-line bg-memo-surface p-2.5"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.12,
+            shadowRadius: 32,
+            elevation: 8,
+          }}
+        >
+          <Pressable
+            className="flex-1 items-center gap-1 rounded-xl py-2.5"
+            onPress={handleSuspend}
+          >
+            <Ionicons name="pause-outline" size={20} color="#15181F" />
+            <Text className="text-[11px] font-medium text-memo-ink">
+              {t("suspend_action")}
+            </Text>
+          </Pressable>
+          <Pressable
+            className="flex-1 items-center gap-1 rounded-xl py-2.5"
+            onPress={handleResetProgress}
+          >
+            <Ionicons name="refresh-outline" size={20} color="#15181F" />
+            <Text className="text-[11px] font-medium text-memo-ink">
+              {t("reset_progress_action")}
+            </Text>
+          </Pressable>
+          <Pressable
+            className="flex-1 items-center gap-1 rounded-xl py-2.5"
+            onPress={handleDelete}
+          >
+            <Ionicons name="trash-outline" size={20} color="#D85D5D" />
+            <Text className="text-[11px] font-medium text-memo-danger">
+              {t("delete_action")}
+            </Text>
+          </Pressable>
         </View>
       )}
     </SafeAreaView>

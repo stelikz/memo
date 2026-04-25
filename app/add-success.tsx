@@ -1,4 +1,4 @@
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,33 +27,52 @@ export default function AddSuccessScreen() {
   if (!aiResult) return null;
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-memo-bg" edges={["top"]}>
+      {/* Close button */}
+      <View className="flex-row justify-end px-[18px] pt-2">
+        <Pressable
+          className="h-9 w-9 items-center justify-center rounded-full border border-memo-line bg-memo-surface"
+          onPress={handleGoHome}
+        >
+          <Ionicons name="close" size={18} color="#15181F" />
+        </Pressable>
+      </View>
+
       <ScrollView
-        contentContainerClassName="px-5 pb-8 pt-6"
+        contentContainerClassName="px-[18px] pb-8 pt-5"
         keyboardShouldPersistTaps="handled"
       >
-        <View className="mb-6 items-center">
-          <View className="mb-3 h-14 w-14 items-center justify-center rounded-full bg-green-100">
-            <Ionicons name="checkmark-circle" size={32} color="#22c55e" />
+        {/* Card with banner */}
+        <View
+          className="overflow-hidden rounded-3xl border border-memo-line bg-memo-surface"
+          style={{
+            shadowColor: "#1F1B14",
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.07,
+            shadowRadius: 32,
+            elevation: 4,
+          }}
+        >
+          {/* Banner */}
+          <View className="items-center bg-memo-success-soft py-2.5">
+            <Text className="text-[12px] font-semibold uppercase tracking-widest text-memo-success">
+              ✦ {t("card_created")}
+            </Text>
           </View>
-          <Text className="text-xl font-bold text-gray-900">
-            {t("card_created")}
-          </Text>
+          <View className="p-7 pt-5">
+            <CardPreview
+              card={aiResult}
+              targetLanguage={targetLanguage}
+              translate={t}
+            />
+          </View>
         </View>
 
-        <View className="rounded-2xl bg-white p-5 shadow-sm">
-          <CardPreview
-            card={aiResult}
-            targetLanguage={targetLanguage}
-            translate={t}
-          />
-        </View>
-
-        <View className="mt-6 gap-3">
+        <View className="mt-6 gap-2.5">
           <Button label={t("add_another")} onPress={handleAddAnother} />
           <Button
             label={t("go_home")}
-            variant="ghost"
+            variant="secondary"
             onPress={handleGoHome}
           />
         </View>

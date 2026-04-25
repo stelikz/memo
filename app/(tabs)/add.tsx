@@ -3,6 +3,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -122,49 +123,52 @@ export default function AddScreen() {
   const hasWord = word.trim().length > 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-memo-bg" edges={["top"]}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
-          contentContainerClassName="flex-grow px-5 pb-8 pt-6"
+          contentContainerClassName="flex-grow px-6 pb-8 pt-2"
           keyboardShouldPersistTaps="handled"
         >
-          <Text className="mb-6 text-2xl font-bold text-gray-900">
+          <Text className="text-[36px] font-light text-memo-ink">
             {t("add_word")}
+          </Text>
+          <Text className="mt-1.5 mb-7 text-sm leading-relaxed text-memo-ink-soft">
+            {t("where_did_you_see_it")}
           </Text>
 
           {clipboardText && (
-            <Button
-              variant="ghost"
-              className="mb-4 flex-row items-center gap-3 bg-blue-50 px-4 py-3"
+            <Pressable
+              className="mb-4 flex-row items-center gap-3 rounded-2xl bg-memo-accent-soft px-4 py-3"
               onPress={applyClipboard}
             >
-              <Ionicons name="clipboard-outline" size={20} color="#2563eb" />
+              <Ionicons name="clipboard-outline" size={20} color="#3B6FE5" />
               <View className="flex-1">
-                <Text className="text-sm font-medium text-blue-700">
+                <Text className="text-sm font-medium text-memo-accent">
                   {t("clipboard_suggestion")}
                 </Text>
                 <Text
-                  className="mt-0.5 text-sm text-blue-500"
+                  className="mt-0.5 text-sm text-memo-accent/70"
                   numberOfLines={1}
                 >
                   {clipboardText}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color="#2563eb" />
-            </Button>
+              <Ionicons name="chevron-forward" size={16} color="#3B6FE5" />
+            </Pressable>
           )}
 
-          <View className="mb-4">
-            <Text className="mb-1.5 text-sm font-medium text-gray-700">
+          {/* Word field */}
+          <View className="mb-5 rounded-2xl border border-memo-line bg-memo-surface px-[18px] py-3.5">
+            <Text className="mb-1.5 text-[11px] font-medium uppercase tracking-widest text-memo-ink-muted">
               {t("word_label")}
             </Text>
             <TextInput
-              className="rounded-xl bg-white px-4 py-3.5 text-base text-gray-900"
+              className="text-[28px] font-light text-memo-ink"
               placeholder={t("word_placeholder")}
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor="#8A8F9A"
               value={word}
               onChangeText={(text) => {
                 setWord(text);
@@ -177,18 +181,30 @@ export default function AddScreen() {
             />
           </View>
 
-          <View className="mb-4">
-            <Text className="mb-1.5 text-sm font-medium text-gray-700">
-              {t("sentence_label")}
-            </Text>
-            <Text className="mb-1.5 text-xs text-gray-400">
-              {t("where_did_you_see_it")}
+          {/* Sentence field */}
+          <View
+            className={`mb-5 rounded-2xl border bg-memo-surface px-[18px] py-3.5 ${
+              submitWarning === "word_not_in_sentence"
+                ? "border-memo-danger"
+                : "border-memo-line"
+            }`}
+          >
+            <Text
+              className={`mb-1.5 text-[11px] font-medium uppercase tracking-widest ${
+                submitWarning === "word_not_in_sentence"
+                  ? "text-memo-danger"
+                  : "text-memo-ink-muted"
+              }`}
+            >
+              {submitWarning === "word_not_in_sentence"
+                ? `${t("sentence_label")} — ${t("word_not_in_sentence")}`
+                : `${t("sentence_label")} (optional)`}
             </Text>
             <TextInput
               ref={sentenceInputRef}
-              className="min-h-[80px] rounded-xl bg-white px-4 py-3.5 text-base text-gray-900"
-              placeholder="ex : Je vais au marché."
-              placeholderTextColor="#9ca3af"
+              className="min-h-[60px] text-[15px] leading-relaxed text-memo-ink"
+              placeholder="Where did you encounter it? Helps find the right meaning."
+              placeholderTextColor="#8A8F9A"
               value={sentence}
               onChangeText={(text) => {
                 setSentence(text);
@@ -205,16 +221,42 @@ export default function AddScreen() {
             <SoftWarning message={t("no_sentence_warning")} />
           )}
 
-          {submitWarning === "word_not_in_sentence" && (
-            <SoftWarning message={t("word_not_in_sentence")} />
-          )}
-
           <Button
-            className="mt-2"
-            label={submitWarning ? t("add_button") + " \u2192" : t("add_button")}
             onPress={handleSubmit}
             disabled={!hasWord}
-          />
+          >
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="sparkles" size={16} color={hasWord ? "#F6F6F4" : "#8A8F9A"} />
+              <Text className={`text-base font-semibold ${hasWord ? "text-white" : "text-memo-ink-muted"}`}>
+                {submitWarning ? t("add_button") + " →" : t("add_button")}
+              </Text>
+            </View>
+          </Button>
+
+          {/* OR divider */}
+          <View className="my-6 flex-row items-center gap-3">
+            <View className="flex-1 h-[0.5px] bg-memo-line" />
+            <Text className="text-[11px] uppercase tracking-widest text-memo-ink-muted">
+              Or
+            </Text>
+            <View className="flex-1 h-[0.5px] bg-memo-line" />
+          </View>
+
+          {/* Camera CTA */}
+          <Pressable className="flex-row items-center gap-3.5 rounded-2xl border border-dashed border-memo-line-strong bg-memo-surface px-5 py-5">
+            <View className="h-11 w-11 items-center justify-center rounded-full bg-memo-surface-alt">
+              <Ionicons name="camera-outline" size={22} color="#15181F" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[15px] font-medium text-memo-ink">
+                Capture from a photo
+              </Text>
+              <Text className="mt-0.5 text-[13px] text-memo-ink-soft">
+                Snap a page or a sign — we'll pick out words.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#8A8F9A" />
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

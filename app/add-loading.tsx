@@ -73,7 +73,7 @@ export default function AddLoadingScreen() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-memo-bg" edges={["top"]}>
       <LoadingOverlay
         word={word}
         steps={[
