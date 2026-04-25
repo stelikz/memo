@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -20,10 +20,10 @@ import {
   type LibraryFilter,
   type LibrarySort,
 } from "../db/queries";
-import { CardState } from "../db/types";
 import { Button } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
 import { DropdownMenu } from "../components/DropdownMenu";
+import { getMemorizationChip } from "../lib/card-state";
 
 // ── Filter & Sort config ────────────────────────────────────────────────────
 
@@ -41,26 +41,7 @@ const SORTS: { key: LibrarySort; labelKey: string }[] = [
   { key: "due_date", labelKey: "sort_due_date" },
 ];
 
-// ── FSRS state helpers ──────────────────────────────────────────────────────
-
-function getMemorizationChip(state: number, t: (key: string) => string): {
-  label: string;
-  bg: string;
-  fg: string;
-} {
-  switch (state) {
-    case CardState.Review:
-      return { label: t("state_mature"), bg: "bg-memo-success-soft", fg: "text-memo-success" };
-    case CardState.Learning:
-    case CardState.Relearning:
-      return { label: t("state_learning"), bg: "bg-memo-accent-soft", fg: "text-memo-accent" };
-    case CardState.New:
-    default:
-      return { label: t("state_new"), bg: "bg-memo-surface-alt", fg: "text-memo-ink-soft" };
-  }
-}
-
-// ── Row component (memoized) ────────────────────────────────────────────────
+// ── Row component ───────────────────────────────────────────────────────────
 
 type CardRow = ReturnType<typeof getLibraryCards>[number];
 
@@ -91,12 +72,10 @@ function LibraryRow({
   const multi = item.totalCommonMeanings > 1;
   const [expanded, setExpanded] = useState(false);
 
-  let otherMeanings: OtherMeaning[] = [];
-  if (multi) {
-    try {
-      otherMeanings = JSON.parse(item.otherMeaningsJson);
-    } catch {}
-  }
+  const otherMeanings = useMemo(() => {
+    if (!multi || !item.otherMeaningsJson) return [];
+    try { return JSON.parse(item.otherMeaningsJson) as OtherMeaning[]; } catch { return []; }
+  }, [multi, item.otherMeaningsJson]);
 
   const handlePress = () => {
     if (selectMode) {
