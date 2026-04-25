@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CardState } from "../db/types";
+import { useLocale } from "../i18n";
 
 interface OtherMeaning {
   definition_target: string;
@@ -20,20 +21,20 @@ interface WordListItemProps {
   onPress?: () => void;
 }
 
-function getMemorizationChip(state: number): {
+function getMemorizationChip(state: number, t: (key: string) => string): {
   label: string;
   bg: string;
   fg: string;
 } {
   switch (state) {
     case CardState.Review:
-      return { label: "Mastered", bg: "bg-memo-success-soft", fg: "text-memo-success" };
+      return { label: t("state_mature"), bg: "bg-memo-success-soft", fg: "text-memo-success" };
     case CardState.Learning:
     case CardState.Relearning:
-      return { label: "Learning", bg: "bg-memo-accent-soft", fg: "text-memo-accent" };
+      return { label: t("state_learning"), bg: "bg-memo-accent-soft", fg: "text-memo-accent" };
     case CardState.New:
     default:
-      return { label: "New", bg: "bg-memo-surface-alt", fg: "text-memo-ink-soft" };
+      return { label: t("state_new"), bg: "bg-memo-surface-alt", fg: "text-memo-ink-soft" };
   }
 }
 
@@ -47,7 +48,8 @@ export function WordListItem({
   otherMeaningsJson,
   onPress,
 }: WordListItemProps) {
-  const chip = state != null ? getMemorizationChip(state) : null;
+  const t = useLocale();
+  const chip = state != null ? getMemorizationChip(state, t) : null;
   const isMultiMeaning = (totalCommonMeanings ?? 0) > 1;
   const [expanded, setExpanded] = useState(false);
 

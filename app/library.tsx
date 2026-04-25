@@ -43,20 +43,20 @@ const SORTS: { key: LibrarySort; labelKey: string }[] = [
 
 // ── FSRS state helpers ──────────────────────────────────────────────────────
 
-function getMemorizationChip(state: number): {
+function getMemorizationChip(state: number, t: (key: string) => string): {
   label: string;
   bg: string;
   fg: string;
 } {
   switch (state) {
     case CardState.Review:
-      return { label: "Mastered", bg: "bg-memo-success-soft", fg: "text-memo-success" };
+      return { label: t("state_mature"), bg: "bg-memo-success-soft", fg: "text-memo-success" };
     case CardState.Learning:
     case CardState.Relearning:
-      return { label: "Learning", bg: "bg-memo-accent-soft", fg: "text-memo-accent" };
+      return { label: t("state_learning"), bg: "bg-memo-accent-soft", fg: "text-memo-accent" };
     case CardState.New:
     default:
-      return { label: "New", bg: "bg-memo-surface-alt", fg: "text-memo-ink-soft" };
+      return { label: t("state_new"), bg: "bg-memo-surface-alt", fg: "text-memo-ink-soft" };
   }
 }
 
@@ -87,7 +87,7 @@ function LibraryRow({
   onPress,
   onLongPress,
 }: LibraryRowProps) {
-  const chip = getMemorizationChip(item.state);
+  const chip = getMemorizationChip(item.state, t);
   const multi = item.totalCommonMeanings > 1;
   const [expanded, setExpanded] = useState(false);
 
