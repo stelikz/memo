@@ -115,13 +115,10 @@ export default function ReviewScreen() {
   const rateAndAdvance = useReviewStore((s) => s.rateAndAdvance);
 
   useEffect(() => {
-    let dueCards = getDueCards(db);
+    const dueCards = getDueCards(db, undefined, dailyReviewLimit > 0 ? dailyReviewLimit : undefined);
     if (dueCards.length === 0) {
       router.back();
       return;
-    }
-    if (dailyReviewLimit > 0) {
-      dueCards = dueCards.slice(0, dailyReviewLimit);
     }
     startSession(dueCards);
   }, []);

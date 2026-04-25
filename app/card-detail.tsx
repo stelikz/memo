@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -30,13 +30,13 @@ export default function CardDetailScreen() {
     );
   }
 
-  const otherMeanings: Array<{
+  const otherMeanings = useMemo(() => JSON.parse(card.otherMeaningsJson) as Array<{
     definition_target: string;
     definition_native: string;
     example_sentence: string;
-  }> = JSON.parse(card.otherMeaningsJson);
+  }>, [card.otherMeaningsJson]);
 
-  const previewCard: AICardResponse = {
+  const previewCard = useMemo((): AICardResponse => ({
     lemma: card.lemma,
     encountered_form: card.encounteredForm,
     part_of_speech: card.partOfSpeech,
@@ -52,7 +52,7 @@ export default function CardDetailScreen() {
     synonyms: JSON.parse(card.synonymsJson),
     antonym: card.antonym ? { word: card.antonym } : null,
     irregular_forms: card.irregularForms ?? null,
-  };
+  }), [card, otherMeanings]);
 
   // Progress label
   const progressPct = Math.round(

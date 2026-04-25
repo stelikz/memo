@@ -83,9 +83,9 @@ export function getCardsByLemma(db: DrizzleDB, lemma: string) {
  * Filters: due <= now, not suspended, status is complete.
  * Ordered by due date ascending so learning/relearning cards come back first.
  */
-export function getDueCards(db: DrizzleDB, now?: number) {
+export function getDueCards(db: DrizzleDB, now?: number, limit?: number) {
   const timestamp = now ?? nowUnix();
-  return db
+  const query = db
     .select()
     .from(cards)
     .where(
@@ -95,8 +95,11 @@ export function getDueCards(db: DrizzleDB, now?: number) {
         eq(cards.status, "complete"),
       )
     )
-    .orderBy(asc(cards.due))
-    .all();
+    .orderBy(asc(cards.due));
+  if (limit && limit > 0) {
+    return query.limit(limit).all();
+  }
+  return query.all();
 }
 
 /**

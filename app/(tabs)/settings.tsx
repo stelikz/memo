@@ -116,6 +116,8 @@ function SectionCard({ children }: { children: React.ReactNode }) {
   );
 }
 
+const REVIEW_LIMIT_OPTIONS = [5, 10, 15, 20, 30, 50, 0] as const;
+
 // ── Main screen ─────────────────────────────────────────────────────────────
 
 export default function SettingsScreen() {
@@ -169,8 +171,6 @@ export default function SettingsScreen() {
     setSetting("target_language", code);
     setShowLanguagePicker(false);
   };
-
-  const REVIEW_LIMIT_OPTIONS = [5, 10, 15, 20, 30, 50, 0] as const;
 
   const limitDropdownOptions = REVIEW_LIMIT_OPTIONS.map((v) => ({
     value: String(v),
