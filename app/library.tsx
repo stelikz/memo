@@ -125,7 +125,7 @@ function LibraryRow({
             {item.isSuspended === 1 && (
               <View className="rounded bg-memo-warn-soft px-1.5 py-0.5">
                 <Text className="text-[10px] font-medium text-memo-warn">
-                  PAUSED
+                  {t("suspended").toUpperCase()}
                 </Text>
               </View>
             )}

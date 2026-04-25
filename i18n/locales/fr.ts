@@ -46,6 +46,8 @@ export const fr: Record<string, string> = {
   hide_native_translation: "🇬🇧 Masquer la traduction anglaise",
   also_means: "Ce mot a aussi d'autres sens",
   other_meanings_count: "sens courants",
+  other_meanings_tap: "autre sens · appuyez pour voir",
+  other_meanings_tap_plural: "autres sens · appuyez pour voir",
   duplicate_word_message: "Vous avez déjà ce mot avec ce sens.",
   saved_as_pending: "Sauvegardé hors connexion — sera traité automatiquement.",
   error_rate_limit: "Limite quotidienne atteinte. Réessayez demain.",

@@ -94,8 +94,10 @@ export function CardPreview({
         <View className="mt-4 flex-row items-center gap-2 border-t border-memo-line pt-4">
           <Ionicons name="information-circle-outline" size={16} color="#3B6FE5" />
           <Text className="text-[13px] font-medium text-memo-accent">
-            {card.total_common_meanings - 1} other meaning
-            {card.total_common_meanings > 2 ? "s" : ""} · tap to expand
+            {card.total_common_meanings - 1}{" "}
+            {card.total_common_meanings > 2
+              ? t("other_meanings_tap_plural")
+              : t("other_meanings_tap")}
           </Text>
         </View>
       )}

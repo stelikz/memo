@@ -67,7 +67,7 @@ export function WordListItem({
             {isSuspended === 1 && (
               <View className="rounded bg-memo-warn-soft px-1.5 py-0.5">
                 <Text className="text-[10px] font-medium text-memo-warn">
-                  PAUSED
+                  {t("suspended").toUpperCase()}
                 </Text>
               </View>
             )}
@@ -75,7 +75,7 @@ export function WordListItem({
           {isMultiMeaning ? (
             <View className="mt-0.5 flex-row items-center gap-1">
               <Text className="text-[13px] font-medium text-memo-accent">
-                {totalCommonMeanings} meanings
+                {totalCommonMeanings} {t("meanings_short")}
               </Text>
               <Ionicons
                 name={expanded ? "chevron-up" : "chevron-down"}
