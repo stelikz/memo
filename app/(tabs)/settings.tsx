@@ -1,6 +1,8 @@
 import { useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Switch,
@@ -157,7 +159,6 @@ export default function SettingsScreen() {
     _event: DateTimePickerEvent,
     date?: Date,
   ) => {
-    setShowTimePicker(false);
     if (!date) return;
     const newTime = dateToTimeString(date);
     if (newTime === reminderTime) return;
@@ -209,6 +210,10 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-memo-bg" edges={["top"]}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-[18px] pb-8"
@@ -315,7 +320,7 @@ export default function SettingsScreen() {
             <>
               <SettingRow
                 label={t("reminder_time")}
-                onPress={() => setShowTimePicker(true)}
+                onPress={() => setShowTimePicker(!showTimePicker)}
                 right={
                   <Text className="text-sm text-memo-accent font-mono">
                     {formatTime(reminderTime)}
@@ -324,13 +329,23 @@ export default function SettingsScreen() {
                 chevron
               />
               {showTimePicker && (
-                <DateTimePicker
-                  value={timeStringToDate(reminderTime)}
-                  mode="time"
-                  display="spinner"
-                  is24Hour={false}
-                  onChange={handleTimeChange}
-                />
+                <View className="pb-2">
+                  <DateTimePicker
+                    value={timeStringToDate(reminderTime)}
+                    mode="time"
+                    display="spinner"
+                    is24Hour={false}
+                    onChange={handleTimeChange}
+                  />
+                  <Pressable
+                    className="mx-[18px] items-center rounded-xl bg-memo-accent py-2.5"
+                    onPress={() => setShowTimePicker(false)}
+                  >
+                    <Text className="text-sm font-semibold text-white">
+                      {t("confirm")}
+                    </Text>
+                  </Pressable>
+                </View>
               )}
             </>
           )}
@@ -366,6 +381,7 @@ export default function SettingsScreen() {
           Mémo · v1.0
         </Text>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
