@@ -1,14 +1,5 @@
 import { useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Switch,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
@@ -20,10 +11,7 @@ import { useLocale } from "../../i18n";
 import { useSettingsStore } from "../../stores/settings";
 import { DropdownMenu } from "../../components/DropdownMenu";
 import { db } from "../../db/client";
-import {
-  getAllCardsForExport,
-  resetAllProgress,
-} from "../../db/queries";
+import { getAllCardsForExport, resetAllProgress } from "../../db/queries";
 import {
   getAvailableLanguages,
   LANGUAGE_CONFIGS,
@@ -47,13 +35,6 @@ function dateToTimeString(date: Date): string {
   const h = date.getHours().toString().padStart(2, "0");
   const m = date.getMinutes().toString().padStart(2, "0");
   return `${h}:${m}`;
-}
-
-function formatTime(time: string): string {
-  const [h, m] = time.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const displayH = h % 12 || 12;
-  return `${displayH}:${m.toString().padStart(2, "0")} ${period}`;
 }
 
 // ── Row components ──────────────────────────────────────────────────────────
@@ -98,9 +79,7 @@ function SettingRow({
         ) : null}
       </View>
       {right}
-      {chevron && (
-        <Ionicons name="chevron-forward" size={14} color="#8A8F9A" />
-      )}
+      {chevron && <Ionicons name="chevron-forward" size={14} color="#8A8F9A" />}
     </View>
   );
 
@@ -135,7 +114,6 @@ export default function SettingsScreen() {
     (s) => s.setShowNativeByDefault,
   );
 
-  const [showTimePicker, setShowTimePicker] = useState(false);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
 
   // ── Handlers ────────────────────────────────────────────────────────────
@@ -155,10 +133,7 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleTimeChange = async (
-    _event: DateTimePickerEvent,
-    date?: Date,
-  ) => {
+  const handleTimeChange = async (_event: DateTimePickerEvent, date?: Date) => {
     if (!date) return;
     const newTime = dateToTimeString(date);
     if (newTime === reminderTime) return;
@@ -210,178 +185,162 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-memo-bg" edges={["top"]}>
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-[18px] pb-8"
         showsVerticalScrollIndicator={false}
       >
-        <Text className="mb-6 mt-2 text-[36px] font-light text-memo-ink">
-          {t("settings")}
-        </Text>
+          <Text className="mb-6 mt-2 text-[36px] font-light text-memo-ink">
+            {t("settings")}
+          </Text>
 
-        {/* ── Preferences ──────────────────────────────────────────────── */}
-        <Text className="mb-2 px-1.5 text-[11px] font-semibold uppercase tracking-widest text-memo-ink-muted">
-          {t("preferences")}
-        </Text>
-        <SectionCard>
-          <SettingRow
-            label={t("show_native_by_default")}
-            description={t("show_native_by_default_desc")}
-            right={
-              <Switch
-                value={showNativeByDefault}
-                onValueChange={setShowNativeByDefault}
-                trackColor={{ false: "rgba(21,24,31,0.16)", true: "#93c5fd" }}
-                thumbColor={showNativeByDefault ? "#3B6FE5" : "#f4f4f5"}
-              />
-            }
-          />
-          <SettingRow
-            label={t("target_language")}
-            onPress={() => setShowLanguagePicker(!showLanguagePicker)}
-            right={
-              <View className="flex-row items-center">
-                <Text className="mr-1 text-sm text-memo-ink-soft">
-                  {currentLangLabel}
-                </Text>
-                <Ionicons
-                  name={showLanguagePicker ? "chevron-up" : "chevron-down"}
-                  size={16}
-                  color="#8A8F9A"
+          {/* ── Preferences ──────────────────────────────────────────────── */}
+          <Text className="mb-2 px-1.5 text-[11px] font-semibold uppercase tracking-widest text-memo-ink-muted">
+            {t("preferences")}
+          </Text>
+          <SectionCard>
+            <SettingRow
+              label={t("show_native_by_default")}
+              description={t("show_native_by_default_desc")}
+              right={
+                <Switch
+                  value={showNativeByDefault}
+                  onValueChange={setShowNativeByDefault}
+                  trackColor={{ false: "rgba(21,24,31,0.16)", true: "#93c5fd" }}
+                  thumbColor={showNativeByDefault ? "#3B6FE5" : "#f4f4f5"}
                 />
-              </View>
-            }
-          />
-          {showLanguagePicker && (
-            <View className="mx-[18px] mb-3 rounded-xl bg-memo-bg p-1">
-              {languages.map((lang) => {
-                const isSelected = lang.code === targetLanguage;
-                return (
-                  <Pressable
-                    key={lang.code}
-                    className={`flex-row items-center justify-between rounded-lg px-3 py-2.5 ${isSelected ? "bg-memo-accent-soft" : ""}`}
-                    onPress={() => handleLanguageSelect(lang.code)}
-                  >
-                    <Text
-                      className={`text-base ${isSelected ? "font-semibold text-memo-accent" : "text-memo-ink"}`}
-                    >
-                      {lang.nativeName}
-                    </Text>
-                    <Text className="text-sm text-memo-ink-muted">
-                      {lang.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
-          <SettingRow
-            label={t("daily_review_limit")}
-            description={t("daily_review_limit_desc")}
-            right={
-              <DropdownMenu
-                options={limitDropdownOptions}
-                selected={String(dailyReviewLimit)}
-                onSelect={(v) => setSetting("daily_review_limit", v)}
-              >
+              }
+            />
+            <SettingRow
+              label={t("target_language")}
+              onPress={() => setShowLanguagePicker(!showLanguagePicker)}
+              right={
                 <View className="flex-row items-center">
                   <Text className="mr-1 text-sm text-memo-ink-soft">
-                    {dailyReviewLimit === 0 ? t("unlimited") : String(dailyReviewLimit)}
+                    {currentLangLabel}
                   </Text>
-                  <Ionicons name="chevron-down" size={16} color="#8A8F9A" />
+                  <Ionicons
+                    name={showLanguagePicker ? "chevron-up" : "chevron-down"}
+                    size={16}
+                    color="#8A8F9A"
+                  />
                 </View>
-              </DropdownMenu>
-            }
-          />
-        </SectionCard>
+              }
+            />
+            {showLanguagePicker && (
+              <View className="mx-[18px] mb-3 rounded-xl bg-memo-bg p-1">
+                {languages.map((lang) => {
+                  const isSelected = lang.code === targetLanguage;
+                  return (
+                    <Pressable
+                      key={lang.code}
+                      className={`flex-row items-center justify-between rounded-lg px-3 py-2.5 ${
+                        isSelected ? "bg-memo-accent-soft" : ""
+                      }`}
+                      onPress={() => handleLanguageSelect(lang.code)}
+                    >
+                      <Text
+                        className={`text-base ${
+                          isSelected
+                            ? "font-semibold text-memo-accent"
+                            : "text-memo-ink"
+                        }`}
+                      >
+                        {lang.nativeName}
+                      </Text>
+                      <Text className="text-sm text-memo-ink-muted">
+                        {lang.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+            <SettingRow
+              label={t("daily_review_limit")}
+              description={t("daily_review_limit_desc")}
+              right={
+                <DropdownMenu
+                  options={limitDropdownOptions}
+                  selected={String(dailyReviewLimit)}
+                  onSelect={(v) => setSetting("daily_review_limit", v)}
+                >
+                  <View className="flex-row items-center">
+                    <Text className="mr-1 text-sm text-memo-ink-soft">
+                      {dailyReviewLimit === 0
+                        ? t("unlimited")
+                        : String(dailyReviewLimit)}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color="#8A8F9A" />
+                  </View>
+                </DropdownMenu>
+              }
+            />
+          </SectionCard>
 
-        {/* ── Reminders ────────────────────────────────────────────────── */}
-        <Text className="mb-2 mt-7 px-1.5 text-[11px] font-semibold uppercase tracking-widest text-memo-ink-muted">
-          {t("reminders")}
-        </Text>
-        <SectionCard>
-          <SettingRow
-            label={t("daily_reminder")}
-            description={t("daily_reminder_desc")}
-            right={
-              <Switch
-                value={reminderEnabled}
-                onValueChange={handleReminderToggle}
-                trackColor={{ false: "rgba(21,24,31,0.16)", true: "#93c5fd" }}
-                thumbColor={reminderEnabled ? "#3B6FE5" : "#f4f4f5"}
-              />
-            }
-          />
-          {reminderEnabled && (
-            <>
+          {/* ── Reminders ────────────────────────────────────────────────── */}
+          <Text className="mb-2 mt-7 px-1.5 text-[11px] font-semibold uppercase tracking-widest text-memo-ink-muted">
+            {t("reminders")}
+          </Text>
+          <SectionCard>
+            <SettingRow
+              label={t("daily_reminder")}
+              description={t("daily_reminder_desc")}
+              right={
+                <Switch
+                  value={reminderEnabled}
+                  onValueChange={handleReminderToggle}
+                  trackColor={{ false: "rgba(21,24,31,0.16)", true: "#93c5fd" }}
+                  thumbColor={reminderEnabled ? "#3B6FE5" : "#f4f4f5"}
+                />
+              }
+            />
+            {reminderEnabled && (
               <SettingRow
                 label={t("reminder_time")}
-                onPress={() => setShowTimePicker(!showTimePicker)}
                 right={
-                  <Text className="text-sm text-memo-accent font-mono">
-                    {formatTime(reminderTime)}
-                  </Text>
-                }
-                chevron
-              />
-              {showTimePicker && (
-                <View className="pb-2">
                   <DateTimePicker
                     value={timeStringToDate(reminderTime)}
                     mode="time"
-                    display="spinner"
-                    is24Hour={false}
+                    display="compact"
                     onChange={handleTimeChange}
+                    accentColor="#3B6FE5"
                   />
-                  <Pressable
-                    className="mx-[18px] items-center rounded-xl bg-memo-accent py-2.5"
-                    onPress={() => setShowTimePicker(false)}
-                  >
-                    <Text className="text-sm font-semibold text-white">
-                      {t("confirm")}
-                    </Text>
-                  </Pressable>
-                </View>
-              )}
-            </>
-          )}
-        </SectionCard>
+                }
+              />
+            )}
+          </SectionCard>
 
-        {/* ── Data ─────────────────────────────────────────────────────── */}
-        <Text className="mb-2 mt-7 px-1.5 text-[11px] font-semibold uppercase tracking-widest text-memo-ink-muted">
-          {t("data")}
-        </Text>
-        <SectionCard>
-          <SettingRow
-            label={t("export_data")}
-            description={t("export_data_desc")}
-            onPress={handleExport}
-            chevron
-          />
-        </SectionCard>
+          {/* ── Data ─────────────────────────────────────────────────────── */}
+          <Text className="mb-2 mt-7 px-1.5 text-[11px] font-semibold uppercase tracking-widest text-memo-ink-muted">
+            {t("data")}
+          </Text>
+          <SectionCard>
+            <SettingRow
+              label={t("export_data")}
+              description={t("export_data_desc")}
+              onPress={handleExport}
+              chevron
+            />
+          </SectionCard>
 
-        {/* ── Danger zone ──────────────────────────────────────────────── */}
-        <Text className="mb-2 mt-7 px-1.5 text-[11px] font-semibold uppercase tracking-widest text-memo-ink-muted">
-          {t("danger_zone")}
-        </Text>
-        <SectionCard>
-          <SettingRow
-            label={t("reset_progress")}
-            labelColor="#D85D5D"
-            onPress={handleResetProgress}
-            chevron
-          />
-        </SectionCard>
+          {/* ── Danger zone ──────────────────────────────────────────────── */}
+          <Text className="mb-2 mt-7 px-1.5 text-[11px] font-semibold uppercase tracking-widest text-memo-ink-muted">
+            {t("danger_zone")}
+          </Text>
+          <SectionCard>
+            <SettingRow
+              label={t("reset_progress")}
+              labelColor="#D85D5D"
+              onPress={handleResetProgress}
+              chevron
+            />
+          </SectionCard>
 
-        <Text className="mt-8 text-center text-[12px] text-memo-ink-muted">
-          Mémo · v1.0
-        </Text>
+          <Text className="mt-8 text-center text-[12px] text-memo-ink-muted">
+            Mémo · v1.0
+          </Text>
       </ScrollView>
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
